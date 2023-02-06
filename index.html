@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <link rel="stylesheet" type="text/css" href="css/index.css">
+  <link href="./css/fontawesome.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="./script/fontawesome.min.js">
+  <title>Document</title>
+</head>
+<body>
+
+<div class="container-xl">
+  <div class="row justify-content-evenly">
+    <div class="col-3">
+      <button id="pair" class="btn btn-info main-elem" style="margin-bottom: 1rem; margin-top: 15rem; font-weight: 500;">Подключить устройство</button>
+    </div>
+    <div class="col-3">
+      <button id="getVal" class="btn btn-info main-elem" style="margin-bottom: 1rem; margin-top: 15rem; font-weight: 500;">Получить значения</button>
+    </div>
+  </div>  
+</div>
+
+
+<div class="container-xl">
+  <div class="row justify-content-evenly">
+      <div class="col-3">
+        <div class="badge bg-primary text-wrap main-elem" >
+          SYS Верхнее давление
+        </div>
+      </div>
+      <div class="col-3">
+        <div class="alert alert-dark main-elem" role="alert" id="SYS_id" ></div>
+      </div>
+  </div>
+</div>
+
+<div class="container-xl">
+  <div class="row justify-content-evenly">
+      <div class="col-3">
+        <div class="badge bg-primary text-wrap main-elem" >
+          DIA Нижнее давление
+        </div>
+      </div>
+      <div class="col-3">
+        <div class="alert alert-dark main-elem" role="alert" id="DIA_id" ></div>
+      </div>
+    </div>
+</div>
+
+
+<div class="container-xl">
+  <div class="row justify-content-evenly">
+      <div class="col-3">
+        <div class="badge bg-primary text-wrap main-elem" >
+          <div class="main-elem" style="height: auto; width: auto;">
+            PUL  
+          </div>
+          <div class="main-elem" style="height: auto; width: auto;">
+            Пульс
+          </div>
+        </div>
+      </div>
+      <div class="col-3">
+        <div class="alert alert-dark main-elem main-elem" role="alert" id="PUL_id" ></div>
+      </div>
+  </div>
+</div>
+
+<!--   <div class="container">
+    <div class="badge bg-primary text-wrap" style="width: 6rem;">
+      SYS Верхнее давление
+    </div>
+    <div class="alert alert-dark" role="alert" id="SYS_id" style="width: 6rem;"></div>
+  </div> -->
+  <div class="container">
+    <img src="./ico/heart-pulse-solid.svg" style="width: 40pt; height: 40pt; padding-left: 10px;" id="heart_ico"></img>
+    
+  </div>
+  <div class="container">
+    
+    
+  </div>
+  
+  <script type="text/javascript" src="./script/pulse.js"></script>
+  <script>
+
+    
+    
+  </script>
+</body>
+</html>

@@ -5,7 +5,9 @@ var bodyParser = require('body-parser');
 const urlencodedParser = express.urlencoded({extended: false});
 const mainRouter = require('./router/mainRouter')
 var path = require('path')
-
+const db = require('./database')
+const MonitoringTon = require('./models/MonitoringTon')
+const { QueryTypes } = require('sequelize')
 //app.use('/assets', express.static(path.join(__dirname, "../assets")));
 app.use(express.static(__dirname + '/client'));
 
@@ -14,18 +16,26 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json());
 
-/* app.get("/", function(request, response){
-    response.sendFile(__dirname + "/client/index.html"); 
-
-});
-
-app.post("/getResults", urlencodedParser, function(request, response){
-    if(!request.body) return response.sendStatus(400);
-    response.send('Успешно')
-    // отправляем пришедший ответ обратно
-    console.log(request.body)
-}); */
 app.use('/', mainRouter);
 
-app.listen(3000)
+try {
+    db.authenticate();
+    console.log('Connection has been established successfully.');
+    
+    
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+  }
 
+  
+  app.listen(3000)
+
+  db.sync({force: false}).then(result=>{}) 
+  .catch(err=> console.log(err));
+  MonitoringTon.findAll({ where: { upper_pressure: 126 }, limit: 1, raw: true })
+  .then((result) => {
+    result.forEach((el) => {
+      console.log(el)
+    })
+  });
+  

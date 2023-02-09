@@ -11,8 +11,7 @@ class MainController {
     async getResults(req, res) {
         try {
             if(!req.body) return res.sendStatus(400);
-            res.send('Успешно')
-            console.log(req.body)
+            res.sendStatus(200)
         }
         catch (e) {
             console.log(e);

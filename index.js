@@ -1,41 +1,63 @@
 const express = require("express");
 const app = express();
-const fs = require("fs");
+/* global.sequelize = require('./database') */
+//const fs = require("fs");
+/* global.Models = {}
+global.Models.monitoring_ton = require('./models/MonitoringTon') */
+const HOST = '127.0.0.1';
+const PORT = 3000;
+const { PrismaClient } = require('@prisma/client');
+global.prisma = new PrismaClient();
+//const { prisma } = require('prisma')
 var bodyParser = require('body-parser');
-const urlencodedParser = express.urlencoded({extended: false});
 const mainRouter = require('./router/mainRouter')
-var path = require('path')
-const db = require('./database')
-const MonitoringTon = require('./models/MonitoringTon')
-const { QueryTypes } = require('sequelize')
-//app.use('/assets', express.static(path.join(__dirname, "../assets")));
+
+//const MonitoringTon = require('./models/MonitoringTon')
+
+
 app.use(express.static(__dirname + '/client'));
 
-app.use(bodyParser.urlencoded({
+app.use(bodyParser.urlencoded({ 
     extended: true
 }));
 app.use(bodyParser.json());
 
-app.use('/', mainRouter);
 
-try {
-    db.authenticate();
-    console.log('Connection has been established successfully.');
+ 
+//clasterise express
+/* app.use((req, res, next) => {
+  if (cluster.isWorker)
+    console.log(
+      `Worker ${cluster.worker.id} handle request`
+    );
+
+  next();
+}); */
+app.listen(PORT, HOST, () => {
+  //connect();  
+});
+
+//connect db
+/* async function connect(){
+  const puls = await prisma.monitoring_ton.findUnique({
+    where: {
+      id: 63503,
+    },
+  })
+  console.log(puls)
+} */
+
+//routes
+app.use('/', mainRouter);
     
-    
-  } catch (error) {
-    console.error('Unable to connect to the database:', error);
-  }
+//sync database
 
   
-  app.listen(3000)
 
-  db.sync({force: false}).then(result=>{}) 
-  .catch(err=> console.log(err));
-  MonitoringTon.findAll({ where: { upper_pressure: 126 }, limit: 1, raw: true })
+//some querry
+/* MonitoringTon.findAll({ where: { upper_pressure: 126 }, limit: 1, raw: true })
   .then((result) => {
     result.forEach((el) => {
       console.log(el)
-    })
-  });
-  
+     })
+}); */

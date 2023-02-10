@@ -1,17 +1,19 @@
 const { Model } = require('sequelize');
 const {Sequelize} = require('sequelize')
-const sequelize = require("../database")
+//const sequelize = require("../database")
 
 class MonitoringTon extends Model {}
 MonitoringTon.init({
   id: {
     type: Sequelize.INTEGER,
     primaryKey: true,
-    allowNull: false
+    allowNull: false,
+    autoIncrement: true
   },
   dt_change: {
     type: Sequelize.TIME,
-    allowNull: true
+    allowNull: true,
+    defaultValue: Sequelize.NOW
   },
   is_del: {
     type: Sequelize.INTEGER,
@@ -19,7 +21,8 @@ MonitoringTon.init({
   },
   dt_dimension: {
     type: Sequelize.TIME,
-    allowNull: true
+    allowNull: true,
+    defaultValue: Sequelize.NOW
   },
   upper_pressure: {
     type: Sequelize.INTEGER,

@@ -41,18 +41,18 @@ model apointment {
   patient_id                BigInt?
   medic_id                  BigInt?
   device_id                 BigInt?
-  smartphone_id             BigInt?          @default(0)
-  act_transfer_id           BigInt?          @default(0)
-  act_return_id             BigInt?          @default(0)
-  contract_id               BigInt?          @default(0)
+  smartphone_id             BigInt?
+  act_transfer_id           BigInt?
+  act_return_id             BigInt?
+  contract_id               BigInt?
   return_date               DateTime?        @db.Timestamp(6)
-  ap_date                   DateTime?        @default(now()) @db.Timestamp(6)
-  transfer_date             DateTime?        @default(now()) @db.Timestamp(6)
-  sp_apointment_type_id     Int?              
+  ap_date                   DateTime?        @db.Timestamp(6)
+  transfer_date             DateTime?        @db.Timestamp(6)
+  sp_apointment_type_id     Int?
   act_transfer_locked       Int?             @default(0)
   act_return_locked         Int?             @default(0)
-  description               String?          @db.VarChar @default("")
-  sp_ecg_apointment_type_id Int?             @default(0)
+  description               String?          @db.VarChar
+  sp_ecg_apointment_type_id Int?
   finished                  Int?             @default(0)
   finished_status           Int?
   sp_district_id            Int?
@@ -224,7 +224,7 @@ model monitoring_ton {
   id                  BigInt      @id @default(dbgenerated("gen_id('general_id_seq'::text)"))
   dt_change           DateTime?   @default(now()) @db.Timestamp(6)
   is_del              Int?
-  dt_dimension        DateTime?   @default(now()) @db.Timestamp(6)
+  dt_dimension        DateTime?   @db.Timestamp(6)
   upper_pressure      Int?
   lower_pressure      Int?
   heart_rate          Int?
@@ -470,6 +470,12 @@ model sp_tasks {
   sp_roles_rel_task                           sp_roles_rel_task[]
 }
 
+model users_db_tokens {
+  id               Int     @id(map: "users_db_tokens_pk") @default(dbgenerated("gen_id('general_id_seq'::text)"))
+  refreshtoken     String? @db.VarChar
+  uirs_users_db_id Int?
+}
+
 model uirs_users {
   id                                       Int                     @id @default(dbgenerated("gen_id('general_id_seq'::text)"))
   tabel_id                                 String?                 @db.VarChar(16)
@@ -491,7 +497,7 @@ model uirs_users {
   small_name_rp                            String?                 @db.VarChar(256)
   small_name_dp                            String?                 @db.VarChar(256)
   birthday                                 DateTime?               @db.Date
-  doctor_id                                BigInt?
+  doctor_id                                Int?
   doctor_doctor_user_insert_idTouirs_users doctor[]                @relation("doctor_user_insert_idTouirs_users")
   doctor_doctor_user_update_idTouirs_users doctor[]                @relation("doctor_user_update_idTouirs_users")
   sp_roles                                 sp_roles[]
@@ -501,7 +507,7 @@ model uirs_users {
 }
 
 model uirs_users_db {
-  id                         BigInt                       @id @default(dbgenerated("gen_id('general_id_seq'::text)"))
+  id                         Int                          @id @default(dbgenerated("gen_id('general_id_seq'::text)"))
   login                      String?                      @unique @db.VarChar(32)
   uirs_users_id              Int?                      @unique
   is_admin                   Int?
@@ -509,6 +515,7 @@ model uirs_users_db {
   is_boss                    Int?
   is_secretar                Int?
   is_system                  Int?
+  password                   String?                      @db.VarChar
   uirs_users                 uirs_users?                  @relation(fields: [uirs_users_id], references: [id], onDelete: Cascade)
   uirs_users_db_rel_sp_roles uirs_users_db_rel_sp_roles[]
 }
@@ -528,7 +535,7 @@ model uirs_users_db_grants {
 
 model uirs_users_db_rel_sp_roles {
   id               BigInt         @id(map: "pk_uirs_users_db_rel_sp_roles") @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  uirs_users_db_id BigInt?
+  uirs_users_db_id Int?
   sp_roles_id      Int?
   dt_change        DateTime?      @default(now()) @db.Timestamp(6)
   sp_roles         sp_roles?      @relation(fields: [sp_roles_id], references: [id], onDelete: NoAction, onUpdate: NoAction)

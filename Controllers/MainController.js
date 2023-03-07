@@ -1,8 +1,12 @@
 const { Prisma } = require("@prisma/client");
 const { response } = require("express");
-
+const testPDF = require('../filesHTML/test');
+const pdf = require('html-pdf')
+const path = require('path')
+const fs = require('fs')
+let pathToFile = '';
 class MainController {
-
+    
     async getResults(req, res) {
         try {
             console.log(req.body.SYS)
@@ -40,5 +44,26 @@ class MainController {
             console.log(e);
         }
     }
+    
+    async testPrint (req, res) {
+        if (!req.body) res.sendStatus(200)
+        const name = `${Date.now()}_result.pdf`
+        pathToFile = path.join(__dirname, '..', '/files/' + name) 
+        pdf.create(testPDF(req.body), {}).toFile(pathToFile, (err) => {
+            if(err) {
+                res.send(Promise.reject());
+            }
+            res.send(pathToFile);
+            /* res.type('blob')
+            res.contentType("application/pdf");
+            res.send(pathToFile) */
+        });
+    }
+    async fetchPDF(req, res) {
+        res.download(req.body.data)
+    }
+
+
+
 }
 module.exports = new MainController();

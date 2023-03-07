@@ -28,7 +28,7 @@ class UserService {
             const pass_to_hash = password.valueOf();
             const hashPassword = bcrypt.hashSync(pass_to_hash, 8);
             
-            /* const nick = User_nick;
+            /* const nick = User_nick; 
             const name = User_name;
             const surname = User_surname; */
             const small_name_io_famil = User_name.substring(0, 1) + ". " + User_patronomic.substring(0, 1) + ". " + User_surname

@@ -23,6 +23,7 @@ class AuthController {
 
     async registration(req, res) {
         try {
+            console.log(req.body.Doctor_id.valueOf())
             const login = req.body.login.valueOf();
             const password = req.body.password.valueOf();
             const User_name = req.body.User_name.valueOf();

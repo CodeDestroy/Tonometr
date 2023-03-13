@@ -38,7 +38,7 @@ model action_log {
 
 model apointment {
   id                        BigInt           @id(map: "pk_apointment") @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  patient_id                BigInt?
+  patient_id                Int?
   medic_id                  BigInt?
   device_id                 BigInt?
   smartphone_id             BigInt?
@@ -249,7 +249,7 @@ model patient {
   is_del           Int?        @db.SmallInt
   dt_change        DateTime?   @default(now()) @db.Timestamp(6)
   birthday         DateTime?   @db.Date
-  gender           BigInt?
+  gender           Int?
   address_fact     String?     @db.VarChar
   sp_district_id   Int
   dt_del           DateTime?   @db.Timestamp(6)
@@ -404,7 +404,7 @@ model sp_equipment_type {
 }
 
 model sp_gender {
-  id          BigInt    @id @default(dbgenerated("gen_id('sp_gender_id_seq'::text)"))
+  id          Int    @id @default(dbgenerated("gen_id('sp_gender_id_seq'::text)"))
   name_gender String?   @db.VarChar
   dt_change   DateTime? @db.Timestamp(6)
   is_del      Int?

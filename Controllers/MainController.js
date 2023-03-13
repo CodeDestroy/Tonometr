@@ -4,15 +4,30 @@ const testPDF = require('../filesHTML/test');
 const pdf = require('html-pdf')
 const path = require('path')
 const fs = require('fs')
-let pathToFile = '';
+
+const PizZip = require("pizzip");
+const Docxtemplater = require("docxtemplater");
+const MainService = require("../service/MainService");
+
 class MainController {
     
     async getResults(req, res) {
         try {
-            console.log(req.body.SYS)
-            res.send('200')
-
-            if(!req.body) return res.sendStatus(400);
+            const apointment = await prisma.apointment.findFirst({
+                where: {
+                    patient_id: 999,
+                },
+                orderBy: {
+                  id: "desc"
+                }
+              })
+            
+           /*  const apointment = await prisma.apointment.findUnique({
+                where: {
+                    patient_id: 999,
+                },
+              }) */
+            if (!req.body) return res.sendStatus(400);
             await global.prisma.monitoring_ton.create({
                 data: {
                     is_del: null,
@@ -21,23 +36,9 @@ class MainController {
                     heart_rate: parseInt(req.body.PUL),
                     reaction: null,
                     measurement_comment: null,
-                    apointment: {
-                        connectOrCreate: {
-                            where: {
-                              id: 80629,
-                            },
-                            create: {
-                                patient_id: 111,               
-                                medic_id: 11,              
-                                device_id: 44,                        
-                                sp_apointment_type_id: 2,                                            
-                                finished_status: -1,       
-                                sp_district_id: 4          
-                            },
-                          },
-                    }
-                },
-              });
+                    apointment_id: apointment.id,
+                }
+            });
             res.send('Успешно')          
         }
         catch (e) {
@@ -46,21 +47,75 @@ class MainController {
     }
     
     async testPrint (req, res) {
-        if (!req.body) res.sendStatus(200)
-        const name = `${Date.now()}_result.pdf`
+        if (!req.body) res.send(Promise.reject())
+        const name = `template_kpi_1row.docx`
+        let pathToFile = '';
+        pathToFile = path.join(__dirname, '..', '/DocxTemplates/' + name) 
+        const content = fs.readFileSync(
+            path.resolve(pathToFile),
+            "binary"
+        );
+
+        const zip = new PizZip(content);
+
+        const doc = new Docxtemplater(zip, {
+            paragraphLoop: true,
+            linebreaks: true,
+        });
+
+        doc.render({
+            ORG_NAME: "John",
+            DATE_START: "Doe",
+            DATE_END: "0652455478",
+            KPI_NAME_1: "New Website",
+            KPI_VALUE_1: "value 1"
+        });
+
+        const buf = doc.getZip().generate({
+            type: "nodebuffer",
+            // compression: DEFLATE adds a compression step.
+            // For a 50MB output document, expect 500ms additional CPU time
+            compression: "DEFLATE",
+        });
+        
+        // buf is a nodejs Buffer, you can either write it to a
+        // file or res.send it with express for example.
+        const savedName = `${Date.now()}_template_kp1_1.docx`;
+        const pathToSave = path.join(__dirname, '..' ,'/files/') 
+        
+        console.log(pathToSave)
+        fs.writeFileSync(path.resolve(pathToSave, savedName), buf);
+        res.send(savedName)
+        /* const name = `${Date.now()}_result.pdf`
         pathToFile = path.join(__dirname, '..', '/files/' + name) 
         pdf.create(testPDF(req.body), {}).toFile(pathToFile, (err) => {
             if(err) {
                 res.send(Promise.reject());
             }
             res.send(pathToFile);
-            /* res.type('blob')
-            res.contentType("application/pdf");
-            res.send(pathToFile) */
-        });
+        }); */
     }
     async fetchPDF(req, res) {
-        res.download(req.body.data)
+        if (!req.body) res.send(Promise.reject())
+        res.download(path.join(__dirname, '..' ,'/files/', req.body.data))
+    }
+
+    async register (req, res) {
+        if (!req.body) res.send(Promise.reject())
+        const secondName = req.body.secondName;
+        const firstName = req.body.firstName;
+        const patronomicName = req.body.patronomicName;
+        const phone = req.body.phone;
+        const email = req.body.email;
+        const snils = req.body.snils;
+        const polis = req.body.polis;
+        const birthDate = req.body.birthDate;
+        const gender = parseInt(req.body.gender);
+        const adress = req.body.adress;
+        const district = parseInt(req.body.district);
+        const newPatient = await MainService.addPatient(secondName, firstName, patronomicName, phone, email, snils, polis, birthDate, gender, adress, district)
+        //console.log(newPatient);
+        res.send(newPatient)
     }
 
 

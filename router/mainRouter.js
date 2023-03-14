@@ -8,4 +8,7 @@ router.post('/getResults', MainController.getResults);
 router.post('/fetch-pdf', MainController.fetchPDF)
 router.post('/reg-patient', MainController.register)
 
+router.post('/findPatientByChoice', MainController.findPatient)
+
+
 module.exports = router;

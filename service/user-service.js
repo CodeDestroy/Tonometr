@@ -10,16 +10,15 @@ class UserService {
     //registration method
     async registration (login, password, User_name, User_surname, User_patronomic, Doctor_id) {
         try {
-            //find candidate
-            
-            const candidate = await prisma.uirs_users_db.findUnique({
+            //find candidate            
+            const candidate = await prisma.uirs_users_db.findMany({
                 where: {
                     login: login,
                 },
               })
               
             //if user already exists
-            if (candidate) {
+            if (candidate.length > 0) {
                 //send error
                 throw ApiError.BadRequest(`Пользователь ${login} уже существует`)
             }
@@ -28,38 +27,57 @@ class UserService {
             const pass_to_hash = password.valueOf();
             const hashPassword = bcrypt.hashSync(pass_to_hash, 8);
             
-            /* const nick = User_nick; 
-            const name = User_name;
-            const surname = User_surname; */
-            const small_name_io_famil = User_name.substring(0, 1) + ". " + User_patronomic.substring(0, 1) + ". " + User_surname
-            const small_name =  User_surname + User_name.substring(0, 1) + ". " + User_patronomic.substring(0, 1) + ". "
-            //console.log(await tokenService.)
-            const user = await prisma.uirs_users.create({
-                data: {
-                    famil: User_surname,
-                    name: User_name,
-                    otch: User_patronomic,
-                    small_name_io_famil: small_name_io_famil,
-                    full_name: (User_surname + User_name + User_patronomic),
-                    small_name: small_name,
-                    small_name_rp: small_name,
-                    small_name_dp: small_name,
-                    doctor_id: BigInt(parseInt(Doctor_id))
-                },  
-              })
-
-              
-              const user_db = await prisma.uirs_users_db.create({
+            const uirs_users_db =  await prisma.uirs_users_db.create({
                 data: {
                     login: login,
-                    uirs_users_id: user.id,
-                    is_admin: 1,
-                    is_blocked: 0,
                     password: hashPassword
                 },
+            })
+            const uirs_users = await prisma.uirs_users.create({
+                data: {
+                    role_id: 3,
+                    uirs_users_db_id: uirs_users_db.id
+                }
+            })
+            await prisma.uirs_users_db.update({
+                where: {
+                    id: uirs_users_db.id,
+                },
+                data: {
+                    uirs_users_id: uirs_users.id,
+                },
               })
-
-            const userDto = await UserDto.deserialize(user_db, user)
+            let doctor;
+            let uirs_users_patients_doctors;
+            if (Doctor_id ) {
+                doctor = await prisma.doctor.findUnique({
+                    where: {
+                        id: parseInt(Doctor_id)
+                    }
+                })
+                uirs_users_patients_doctors = await prisma.uirs_users_patients_doctors.create({
+                    data: {
+                        uirs_users_id: uirs_users.id,
+                        doctor_id: doctor.id
+                    }
+                })
+            }
+            else {
+                uirs_users_patients_doctors = await prisma.uirs_users_patients_doctors.create({
+                    data: {
+                        uirs_users_id: uirs_users.id,
+                    }
+                })
+            }
+            await prisma.uirs_users.update({
+                where: {
+                    id: uirs_users.id,
+                },
+                data: {
+                    uirs_users_patients_doctors_id: uirs_users_patients_doctors.id,
+                },
+              })
+            const userDto = await UserDto.deserialize(uirs_users_db, uirs_users, uirs_users_patients_doctors, doctor)
             const tokens = tokenService.generateTokens({...userDto});
             //save token to DB
             await tokenService.saveToken(userDto.id, tokens.refreshToken);
@@ -76,29 +94,41 @@ class UserService {
     async login(nick, pass) {
         try {
             //find user
-            const user = await prisma.uirs_users_db.findUnique({
+            const uirs_users_db = await prisma.uirs_users_db.findFirst({
                 where: {
                     login: nick,
                 },
               })
-              const user_full = await prisma.uirs_users.findUnique({
-                where: {
-                    id: user.uirs_users_id
-                },  
-              })  
-            //const user = await User.findOne({User_nick: nick});
             //if user doesnt exist
-            if (!user) {
+            if (!uirs_users_db) {
                 throw ApiError.BadRequest(`Пользователь ${nick} не найден`)
             }
+            const uirs_users = await prisma.uirs_users.findUnique({
+                where: {
+                    id: parseInt(uirs_users_db.uirs_users_id),
+                },  
+              })  
+              
+            const uirs_users_patients_doctors = await prisma.uirs_users_patients_doctors.findFirst({
+                where: {
+                    uirs_users_id: uirs_users.id,
+                }
+            })
+            const doctor = await prisma.doctor.findUnique({
+                where: {
+                    id: uirs_users_patients_doctors.doctor_id
+                }
+            })
+            //const user = await User.findOne({User_nick: nick});
+            
             //check if passwor correct
-            const isPassEquals = await bcrypt.compare(pass, user.password);
+            const isPassEquals = await bcrypt.compare(pass, uirs_users_db.password);
             //if not
             if (!isPassEquals) {
                 throw ApiError.BadRequest(`Пароль неверный`)
             }
-            const userDto = await UserDto.deserialize(user, user_full); //id, role
-            const tokens = tokenService.generateTokens({...userDto});
+            const userDto = await UserDto.deserialize(uirs_users_db, uirs_users, uirs_users_patients_doctors, doctor)
+            const tokens = await tokenService.generateTokens({...userDto});
             await tokenService.saveToken(userDto.id, tokens.refreshToken);
             //send answer (user and tokens)
             return { ...tokens, user: userDto }
@@ -107,24 +137,6 @@ class UserService {
             console.log(e)
         }
     }
-
-    /* async update (id, nick, name, surname) {
-        try {
-            const user = await User.findById(id);
-            if (!user) {
-                throw ApiError.BadRequest(`Пользователь ${nick} не найден`)
-            }
-            const result = await User.updateOne({_id: id}, { 
-                User_nick: nick,
-                User_name: name,
-                User_surname: surname
-            })
-            return await User.findById(id);
-        }
-        catch (e) {
-            console.log(e)
-        }
-    } */
     
     //logout
     async logout(refreshToken) {
@@ -139,35 +151,36 @@ class UserService {
                 throw ApiError.UnauthorizedError();
             }
             const userData = await tokenService.validateRefreshToken(refreshToken);
-            //const tokenFromDb = await prisma.$queryRaw`SELECT * WHERE refreshtoken = ${refreshToken}`
-            /* const tokenFormDb = await prisma.tokens.findUnique({
-                where: {
-                    refreshtoken: refreshToken,
-                },
-              }) */
             const tokenFromDb = await tokenService.findToken(refreshToken);
-    
             if (!userData || !tokenFromDb) {
                 throw ApiError.UnauthorizedError();
             }
-    
-            const user = await prisma.uirs_users_db.findUnique({
+            const uirs_users_db = await prisma.uirs_users_db.findUnique({
                 where: {
-                    id: parseInt(userData.id),
+                    id: userData.id,
                 },
               })
-              const user_full = await prisma.uirs_users.findUnique({
+              
+            const uirs_users = await prisma.uirs_users.findUnique({
                 where: {
-                    id: user.uirs_users_id
+                    id: parseInt(uirs_users_db.uirs_users_id),
                 },  
               })  
-            const userDto = await UserDto.deserialize(user, user_full)
+              
+            const uirs_users_patients_doctors = await prisma.uirs_users_patients_doctors.findFirst({
+                where: {
+                    uirs_users_id: uirs_users.id,
+                }
+            })
+            const doctor = await prisma.doctor.findUnique({
+                where: {
+                    id: uirs_users_patients_doctors.doctor_id
+                }
+            })
+            const userDto = await UserDto.deserialize(uirs_users_db, uirs_users, uirs_users_patients_doctors, doctor)
+            const tokens = await tokenService.generateTokens({...userDto});
             
-            //const user = await User.findById(userData.id)
-            //const userDto = new UserDto(user); //id, role
-            const tokens = tokenService.generateTokens({...userDto});
-            
-            await tokenService.saveToken(user.id, tokens.refreshToken);
+            await tokenService.saveToken(userDto.id, tokens.refreshToken);
             //if all is ok - return user and new tokens
             return { ...tokens, user: userDto }
         }
@@ -176,11 +189,6 @@ class UserService {
         }
     }
 
-    //get all users
-    /* async getUsers() {
-        const users = await User.find();
-        return users;
-    } */
 }
 
 

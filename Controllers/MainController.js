@@ -102,20 +102,28 @@ class MainController {
 
     async register (req, res) {
         if (!req.body) res.send(Promise.reject())
-        const secondName = req.body.secondName;
-        const firstName = req.body.firstName;
-        const patronomicName = req.body.patronomicName;
+        const surname = req.body.secondName;
+        const name = req.body.firstName;
+        const patronomic_name = req.body.patronomicName;
         const phone = req.body.phone;
         const email = req.body.email;
         const snils = req.body.snils;
         const polis = req.body.polis;
-        const birthDate = req.body.birthDate;
+        const birth_date = req.body.birthDate;
         const gender = parseInt(req.body.gender);
-        const adress = req.body.adress;
+        const address = req.body.adress;
         const district = parseInt(req.body.district);
-        const newPatient = await MainService.addPatient(secondName, firstName, patronomicName, phone, email, snils, polis, birthDate, gender, adress, district)
+        const newPatient = await MainService.addPatient(surname, name, patronomic_name, phone, email, snils, polis, birth_date, gender, address, district)
         //console.log(newPatient);
         res.send(newPatient)
+    }
+
+    async findPatient (req, res) {
+        if (!req.body) res.send(Promise.reject()) 
+        const label = req.body.label;
+        const choice = req.body.choice;
+        const patients = await MainService.findPatient(label, choice)
+        res.send(patients)
     }
 
 

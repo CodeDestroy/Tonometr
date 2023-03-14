@@ -7,573 +7,242 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model info {
-  property String  @id
-  value    String?
-
-  @@map("__info")
-}
-
 model act {
-  id             BigInt       @id @default(dbgenerated("gen_id('act_id_seq'::text)"))
-  sp_act_type_id BigInt?
-  act_number     String?      @db.VarChar
-  act_date       DateTime?    @db.Date
-  dt_change      DateTime?    @default(now()) @db.Timestamp(6)
-  is_del         Int?
-  sp_act_type    sp_act_type? @relation(fields: [sp_act_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                                           Int           @id(map: "act_pk") @unique(map: "act_id_idx") @default(autoincrement())
+  type                                         Int?
+  act_number                                   String?       @db.VarChar
+  act_date                                     DateTime?     @db.Date
+  act_type                                     act_type?     @relation(fields: [type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "act_fk")
+  appointment_appointment_act_return_idToact   appointment[] @relation("appointment_act_return_idToact")
+  appointment_appointment_act_transfer_idToact appointment[] @relation("appointment_act_transfer_idToact")
 }
 
-model action_log {
-  id             BigInt    @id(map: "pk_action_log_id") @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  patient_id     BigInt?
-  apointment_id  BigInt?
-  action_type_id Int?
-  action_desc    String?   @db.VarChar
-  action_time    DateTime? @db.Timestamp(6)
-  user_id        BigInt?
-  doctor_id      BigInt?
-  user_login     String?   @db.VarChar
-}
-
-model apointment {
-  id                        BigInt           @id(map: "pk_apointment") @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  patient_id                Int?
-  medic_id                  BigInt?
-  device_id                 BigInt?
-  smartphone_id             BigInt?
-  act_transfer_id           BigInt?
-  act_return_id             BigInt?
-  contract_id               BigInt?
-  return_date               DateTime?        @db.Timestamp(6)
-  ap_date                   DateTime?        @db.Timestamp(6)
-  transfer_date             DateTime?        @db.Timestamp(6)
-  sp_apointment_type_id     Int?
-  act_transfer_locked       Int?             @default(0)
-  act_return_locked         Int?             @default(0)
-  description               String?          @db.VarChar
-  sp_ecg_apointment_type_id Int?
-  finished                  Int?             @default(0)
-  finished_status           Int?
-  sp_district_id            Int?
-  sp_district               sp_district?     @relation(fields: [sp_district_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_sp_district_id")
-  monitoring_ton            monitoring_ton[]
-}
-
-model contract {
-  id              BigInt    @id @default(dbgenerated("gen_id('contract_id_seq'::text)"))
-  contract_number String?   @db.VarChar
-  contract_date   DateTime? @db.Date
-  dt_change       DateTime? @default(now()) @db.Timestamp(6)
-  is_del          Int?
-}
-
-model doctor {
-  id                                           Int          @id(map: "pk_doctor") @default(dbgenerated("gen_id('doctor_id_seq'::text)"))
-  tabel_num                                    String?      @db.VarChar(16)
-  medical_org_id                               BigInt?
-  famil                                        String       @db.VarChar(64)
-  fname                                        String       @db.VarChar(64)
-  otch                                         String       @db.VarChar(64)
-  phone                                        String?      @db.VarChar(256)
-  email                                        String?      @db.VarChar(128)
-  post                                         String?      @db.VarChar(256)
-  small_name_io_famil                          String?      @db.VarChar(128)
-  full_name                                    String?      @db.VarChar(128)
-  small_name                                   String?      @db.VarChar(128)
-  post_full                                    String?      @db.VarChar(512)
-  description                                  String?      @db.VarChar(256)
-  is_del                                       Int?         @db.SmallInt
-  dt_change                                    DateTime?    @default(now()) @db.Timestamp(6)
-  small_name_rp                                String?      @db.VarChar(256)
-  small_name_dp                                String?      @db.VarChar(256)
-  birthday                                     DateTime?    @db.Date
-  dt_insert                                    DateTime?    @default(now()) @db.Timestamp(6)
-  user_insert_id                               Int?      @default(dbgenerated("get_cur_user_id()"))
-  user_update_id                               Int?      @default(dbgenerated("get_cur_user_id()"))
-  med_post_id                                  BigInt?
-  rir_id                                       String?      @db.VarChar
-  rir_snils                                    String?      @db.VarChar
-  rir_lastname                                 String?      @db.VarChar
-  rir_firstname                                String?      @db.VarChar
-  rir_middle                                   String?      @db.VarChar
-  dt_del                                       DateTime?    @db.Timestamp(6)
-  uirs_user_id_del                             BigInt?
-  rir_last_update                              DateTime?    @default(now()) @db.Timestamp(6)
-  med_post                                     med_post?    @relation(fields: [med_post_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  medical_org                                  medical_org? @relation(fields: [medical_org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  uirs_users_doctor_user_insert_idTouirs_users uirs_users?  @relation("doctor_user_insert_idTouirs_users", fields: [user_insert_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  uirs_users_doctor_user_update_idTouirs_users uirs_users?  @relation("doctor_user_update_idTouirs_users", fields: [user_update_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model equipment {
-  id                    BigInt              @id @default(dbgenerated("gen_id('equipment_id_seq'::text)"))
-  serial_number         String?             @db.VarChar
-  dt_change             DateTime?           @default(now()) @db.Timestamp(6)
-  is_del                Int?
-  sp_equipment_model_id BigInt?
-  phone_number          String?             @default(dbgenerated("(+ 7)")) @db.VarChar(12)
-  dt_del                DateTime?           @db.Timestamp(6)
-  sp_equipment_model    sp_equipment_model? @relation(fields: [sp_equipment_model_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model files {
-  id               BigInt   @id(map: "pk_files_id") @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  apointment_id    BigInt?
-  filename         String?  @db.VarChar
-  size             Decimal? @db.Decimal
-  content          String?  @db.VarChar
-  file_description String?  @db.VarChar
-  auto             Int?     @default(0)
-}
-
-model med_post {
-  id             BigInt       @id @default(dbgenerated("gen_id('med_post_id_seq'::text)"))
-  dt_change      DateTime?    @default(now()) @db.Timestamp(6)
-  is_del         Int?
-  med_post_name  String?      @db.VarChar
-  dt_insert      DateTime?    @default(now()) @db.Timestamp(6)
-  user_insert_id BigInt?
-  user_update_id BigInt?
-  parent_id      BigInt?
-  rir_code       String?      @db.VarChar
-  rir_name       String?      @db.VarChar
-  medical_org_id BigInt?
-  doctor         doctor[]
-  medical_org    medical_org? @relation(fields: [medical_org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  med_post       med_post?    @relation("med_postTomed_post", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  other_med_post med_post[]   @relation("med_postTomed_post")
-}
-
-model med_post_filtr {
-  id       BigInt  @id(map: "pk_med_post_filtr") @default(dbgenerated("gen_id('med_post_filtr_id_seq'::text)"))
-  user_id  Int?
-  rir_code String? @db.VarChar(10)
-}
-
-model medical_org {
-  id                     BigInt              @id @default(dbgenerated("gen_id('medical_org_id_seq'::text)"))
-  dt_change              DateTime?           @default(now()) @db.Timestamp(6)
-  is_del                 Int?
-  medical_org_name       String?             @db.VarChar
-  dt_insert              DateTime?           @default(now()) @db.Timestamp(6)
-  user_insert_id         BigInt?
-  user_update_id         BigInt?
-  parent_id              BigInt?
-  medical_org_name_small String?             @db.VarChar
-  region_id              BigInt?
-  inn                    String?             @db.VarChar
-  rir_id                 String?             @db.VarChar
-  rir_oid                String?             @db.VarChar
-  rir_name               String?             @db.VarChar
-  rir_shortname          String?             @db.VarChar
-  rir_address            String?             @db.VarChar
-  rir_cityfiasaoid       String?             @db.VarChar
-  rir_cityfiasaoguid     String?             @db.VarChar
-  rir_phone              String?             @db.VarChar
-  rir_departname         String?             @db.VarChar
-  rir_departoid          String?             @db.VarChar
-  medical_org_name_g     String?             @db.VarChar
-  medical_dir            String?             @db.VarChar
-  dt_del                 DateTime?           @db.Timestamp(6)
-  uirs_user_id_del       BigInt?
-  doctor                 doctor[]
-  med_post               med_post[]
-  medical_org            medical_org?        @relation("medical_orgTomedical_org", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  other_medical_org      medical_org[]       @relation("medical_orgTomedical_org")
-  medical_org_place      medical_org_place[]
-}
-
-model medical_org_district {
-  id          BigInt @id(map: "pk_medical_org_district") @default(dbgenerated("gen_id('medical_org_district_id_seq'::text)"))
-  mo_id       Int?
-  district_id Int?
-}
-
-model medical_org_place {
-  id             BigInt       @id @default(dbgenerated("gen_id('medical_org_place_id_seq'::text)"))
-  aoguid         String?      @db.VarChar(36)
-  houseguid      String?      @db.VarChar(36)
-  fias_dop_info  String?      @db.VarChar(255)
-  post_adr_str   String?      @db.VarChar(1024)
-  medical_org_id BigInt?
-  dt_insert      DateTime?    @default(now()) @db.Timestamp(6)
-  user_insert_id BigInt?
-  user_update_id BigInt?
-  dt_change      DateTime?    @default(now()) @db.Timestamp(6)
-  is_del         Int?
-  place_name     String?      @db.VarChar
-  medical_org    medical_org? @relation(fields: [medical_org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model monitoring_ecg {
-  id                      BigInt    @id @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  dt_change               DateTime? @default(now()) @db.Timestamp(6)
-  is_del                  Int?
-  ecg_content             String?   @db.VarChar
-  ecg_content_name        String?   @db.VarChar
-  ecg_content_description String?   @db.VarChar
-  sp_ecg_content_type_id  Int?
-  apointment_id           BigInt?
-  date_monitoring         DateTime? @db.Timestamp(6)
-  medic_id                BigInt?
-  medical_org_id          BigInt?
-}
-
-model monitoring_ton {
-  id                  BigInt      @id @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  dt_change           DateTime?   @default(now()) @db.Timestamp(6)
-  is_del              Int?
-  dt_dimension        DateTime?   @db.Timestamp(6)
-  upper_pressure      Int?
-  lower_pressure      Int?
-  heart_rate          Int?
-  apointment_id       BigInt?
-  reaction            Int?
-  measurement_comment String?     @db.VarChar
-  apointment          apointment? @relation(fields: [apointment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model patient {
-  id               Int         @id(map: "pk_patient") @default(dbgenerated("gen_id('patient_id_seq'::text)"))
-  famil            String      @db.VarChar(64)
-  fname            String      @db.VarChar(64)
-  otch             String?     @db.VarChar(64)
-  phone            String?     @db.VarChar(256)
-  email            String?     @db.VarChar(128)
-  snils            String?     @db.VarChar(128)
-  polis            String?     @db.VarChar(128)
-  full_name        String?     @db.VarChar(128)
-  small_name       String?     @db.VarChar(128)
-  description      String?     @db.VarChar(256)
-  is_del           Int?        @db.SmallInt
-  dt_change        DateTime?   @default(now()) @db.Timestamp(6)
-  birthday         DateTime?   @db.Date
-  gender           Int?
-  address_fact     String?     @db.VarChar
-  sp_district_id   Int
-  dt_del           DateTime?   @db.Timestamp(6)
-  uirs_user_id_del BigInt?
-  rir_id           String?     @db.VarChar
-  sp_gender        sp_gender?  @relation(fields: [gender], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  sp_district      sp_district @relation(fields: [sp_district_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@index([sp_district_id], map: "fki_patient_sp_district_id_fkey")
-}
-
-model patient_anamnesis {
-  id          BigInt  @id(map: "pk_patient_anamnesis") @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  patient_id  BigInt?
-  sp_mkb10_id Int?
-}
-
-model patient_district {
-  id          BigInt  @id(map: "pk_patient_district") @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  patient_id  BigInt?
-  district_id Int?
-}
-
-model patient_docs {
-  id                         BigInt    @id(map: "pk_patient_docs") @default(dbgenerated("gen_id('patient_id_seq'::text)"))
-  type_doc_id                Int?
-  type_doc_name              String?   @db.VarChar
-  doc_num                    String?   @db.VarChar
-  doc_date                   DateTime? @db.Date
-  given_by                   String?   @db.VarChar
-  apointment_id              BigInt?
-  representative_surname     String?   @db.VarChar
-  representative_name        String?   @db.VarChar
-  representative_patronym    String?   @db.VarChar
-  representative_birthdate   DateTime? @db.Date
-  representative_snils       String?   @db.VarChar
-  representative_phone       String?   @db.VarChar
-  representative_polis       String?   @db.VarChar
-  representative_addressfact String?   @db.VarChar
-  use_representative         Int?      @default(0)
-}
-
-model patient_locked {
-  id            BigInt    @id @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  patient_id    BigInt?
-  lock_status   DateTime? @db.Timestamp(6)
-  apointment_id BigInt?
-  medic_id      BigInt?
-}
-
-model patient_thresholds {
-  id                   BigInt  @id @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  patient_id           BigInt? @unique(map: "patient_thresholds_patient_unq")
-  min_yellow_pressure  Int?
-  min_red_pressure     Int?
-  min_yellow_heartrate Int?
-  min_red_heartrate    Int?
-  max_yellow_pressure  Int?
-  max_red_pressure     Int?
-  max_yellow_heartrate Int?
-  max_red_heartrate    Int?
-  daily_meas_count     Int?    @default(1)
-  backlash             Int?
-}
-
-model sms_trash {
-  id        BigInt    @id @default(dbgenerated("gen_id('sms_trash_id_seq'::text)"))
-  dt_recive DateTime? @default(now()) @db.Timestamp(6)
-  head      String?   @db.VarChar
-  text      String?   @db.VarChar
-  parced    Int?
-  comment   String?   @db.VarChar
-}
-
-model sp_act_type {
-  id        BigInt    @id @default(dbgenerated("gen_id('sp_act_type_id_seq'::text)"))
-  type_name String?   @db.VarChar
-  dt_change DateTime? @db.Timestamp(6)
-  is_del    Int?
+model act_type {
+  id        Int     @id(map: "act_type_pk") @unique(map: "act_type_id_idx") @default(autoincrement())
+  type_name String? @db.VarChar
   act       act[]
 }
 
-model sp_action_log_type {
-  id               Int     @id(map: "pk_sp_sp_action_log_type")
-  action_type_name String? @db.VarChar
+model appointment {
+  id                                   Int              @id(map: "appointment_pk") @unique(map: "appointment_id_idx") @default(autoincrement())
+  patient_id                           Int
+  doctor_id                            Int
+  act_transfer_id                      Int?
+  act_return_id                        Int?
+  contact_id                           Int?
+  ap_date                              DateTime?        @db.Date
+  finished                             String?          @db.VarChar
+  sp_district_id                       Int?
+  device_id                            Int?
+  contract_id                          Int?
+  act_appointment_act_return_idToact   act?             @relation("appointment_act_return_idToact", fields: [act_return_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appointment_act_return_fk")
+  act_appointment_act_transfer_idToact act?             @relation("appointment_act_transfer_idToact", fields: [act_transfer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appointment_act_transfer_fk")
+  contract                             contract?        @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appointment_contract_fk")
+  doctor                               doctor           @relation(fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appointment_doctor_fk")
+  device                               device?          @relation(fields: [device_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appointment_fk")
+  patient                              patient          @relation(fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appointment_patient_fk")
+  monitoring_ton                       monitoring_ton[]
 }
 
-model sp_apointment_type {
-  id                   Int     @id(map: "pk_sp_apointment_type")
-  apointment_type_name String? @db.VarChar
+model contract {
+  id              Int           @id(map: "contract_pk") @unique(map: "contract_id_idx") @default(autoincrement())
+  contract_number String?       @db.VarChar
+  contract_date   DateTime?     @db.Date
+  is_del          String?       @db.VarChar
+  appointment     appointment[]
 }
 
-model sp_country {
-  id                 Int       @id(map: "pk_br_sp_countries") @default(dbgenerated("gen_id('sp_country_id_seq'::text)"))
-  name_country_small String?   @db.VarChar(10)
-  name_country       String?   @db.VarChar(512)
-  dt_change          DateTime? @default(now()) @db.Timestamp(6)
-  is_del             Int?
-  dt_del             DateTime? @db.Timestamp(6)
-  uirs_user_id_del   BigInt?
-  comment_del        String?   @db.VarChar(1024)
+model device {
+  id            Int           @id(map: "device_pk") @unique(map: "device_id_idx") @default(autoincrement())
+  serial_number String?       @db.VarChar
+  model_id      Int?
+  appointment   appointment[]
+  model         model?        @relation(fields: [model_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "device_fk")
 }
 
-model sp_dictionary {
-  id            BigInt  @id @default(dbgenerated("gen_id('sp_dictionary_id_seq'::text)"))
-  parent        BigInt?
-  name          String? @db.VarChar
-  sp_table_name String? @db.VarChar
-  filter_str    String? @db.VarChar
-  order_index   Int?
-  caneditgroup  String? @db.VarChar(10)
+model doctor {
+  id                          Int                           @id(map: "doctor_pk") @unique(map: "doctor_id_idx") @default(autoincrement())
+  tabel_num                   String?                       @db.VarChar
+  surname                     String?                       @db.VarChar
+  name                        String?                       @db.VarChar
+  patronomic_name             String?                       @db.VarChar
+  phone                       String?                       @db.VarChar
+  email                       String?                       @db.VarChar
+  birth_date                  DateTime?                     @db.Date
+  med_post_id                 Int?
+  full_name                   String?                       @db.VarChar
+  gender_id                   Int?
+  appointment                 appointment[]
+  gender                      gender?                       @relation(fields: [gender_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "doctor_fk")
+  uirs_users_patients_doctors uirs_users_patients_doctors[]
 }
 
-model sp_district {
-  id               Int          @id(map: "pk_sp_district") @default(dbgenerated("gen_id('sp_district_id_seq'::text)"))
-  district_name    String?      @db.VarChar
-  is_del           Int?
-  dt_del           DateTime?    @db.Timestamp(6)
-  uirs_user_id_del BigInt?
-  comment_del      String?      @db.VarChar(1024)
-  dt_change        DateTime?    @default(now()) @db.Timestamp(6)
-  apointment       apointment[]
-  patient          patient[]
-}
-
-model sp_ecg_apointment_type {
-  id                       Int     @id(map: "pk_sp_ecg_apointment_type")
-  ecg_apointment_type_name String? @db.VarChar
-}
-
-model sp_ecg_content_type {
-  id                       Int     @id(map: "pk_sp_ecg_content_type")
-  sp_ecg_content_type_name String? @db.VarChar
-}
-
-model sp_equipment_model {
-  id                   BigInt             @id @default(dbgenerated("gen_id('sp_equipment_model_id_seq'::text)"))
-  model_name           String?            @db.VarChar
-  dt_change            DateTime?          @default(now()) @db.Timestamp(6)
-  is_del               Int?
-  sp_equipment_type_id BigInt?
-  equipment            equipment[]
-  sp_equipment_type    sp_equipment_type? @relation(fields: [sp_equipment_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model sp_equipment_type {
-  id                 BigInt               @id @default(dbgenerated("gen_id('sp_equipment_type_id_seq'::text)"))
-  type_name          String?              @db.VarChar
-  dt_change          DateTime?            @default(now()) @db.Timestamp(6)
-  is_del             Int?
-  sp_equipment_model sp_equipment_model[]
-}
-
-model sp_gender {
-  id          Int    @id @default(dbgenerated("gen_id('sp_gender_id_seq'::text)"))
-  name_gender String?   @db.VarChar
-  dt_change   DateTime? @db.Timestamp(6)
-  is_del      Int?
+model gender {
+  id          Int       @id(map: "gender_pk") @unique(map: "gender_id_idx") @default(autoincrement())
+  gender_name String?   @db.VarChar
+  doctor      doctor[]
   patient     patient[]
 }
 
-model sp_mkb10 {
-  id       Int     @id(map: "pk_sp_mkb10") @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  mkb_name String? @db.VarChar
-
-  @@index([id], map: "idx_sp_mkb10_id")
-  @@index([mkb_name], map: "idx_sp_mkb10_mkb_name")
+model med_post {
+  id             Int          @id(map: "med_post_pk") @unique(map: "med_post_id_idx") @default(autoincrement())
+  med_post_name  String?      @db.VarChar
+  parent_id      Int?
+  medical_org_id Int?
+  medical_org    medical_org? @relation(fields: [medical_org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "med_post_fk")
+  med_post       med_post?    @relation("med_postTomed_post", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "med_post_fk_1")
+  other_med_post med_post[]   @relation("med_postTomed_post")
 }
 
-model sp_patient_finished_status {
-  id     Int     @id(map: "pk_sp_patient_finished_status")
-  status String? @db.VarChar
+model medical_org {
+  id                     Int                    @id(map: "medical_org_pk") @unique(map: "medical_org_id_idx") @default(autoincrement())
+  medical_org_name       String?                @db.VarChar
+  parent_id              Int?
+  medical_org_name_small String?                @db.VarChar
+  region                 String?                @db.VarChar
+  med_post               med_post[]
+  medical_org            medical_org?           @relation("medical_orgTomedical_org", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "medical_org_fk")
+  other_medical_org      medical_org[]          @relation("medical_orgTomedical_org")
+  medical_org_district   medical_org_district[]
 }
 
-model sp_reaction {
-  id            Int     @id(map: "pk_sp_reaction")
-  reaction_name String? @db.VarChar
+model medical_org_district {
+  id             Int          @id(map: "medical_org_district_pk") @unique(map: "medical_org_district_id_idx") @default(autoincrement())
+  medical_org_id Int?
+  sp_district_id Int?
+  medical_org    medical_org? @relation(fields: [medical_org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "medical_org_district_fk")
+  sp_district    sp_district? @relation(fields: [sp_district_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "medical_org_district_fk_1")
 }
 
-model sp_roles {
-  id                         Int                          @id(map: "pk_sp_roles") @default(dbgenerated("gen_id('sp_roles_id_seq'::text)"))
-  role_shotname              String?                      @db.VarChar(100)
-  role_fullname              String?                      @db.VarChar(100)
-  dt_change                  DateTime?                    @default(now()) @db.Timestamp(6)
-  is_del                     Int?
-  dt_del                     DateTime?                    @db.Timestamp(6)
-  uirs_user_id_del           Int?
-  comment_del                String?                      @db.VarChar(1024)
-  uirs_users                 uirs_users?                  @relation(fields: [uirs_user_id_del], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  sp_roles_rel_task          sp_roles_rel_task[]
-  uirs_users_db_rel_sp_roles uirs_users_db_rel_sp_roles[]
+model mkb10 {
+  id                Int                 @id(map: "mkb10_pk") @unique(map: "mkb10_id_idx") @default(autoincrement())
+  mkb_name          String?             @db.VarChar
+  patient_anamnesis patient_anamnesis[]
 }
 
-model sp_roles_rel_task {
-  id          BigInt    @id(map: "pk_sp_roles_rel_task") @default(dbgenerated("gen_id('sp_roles_rel_task_id_seq'::text)"))
-  sp_tasks_id BigInt?
-  sp_roles_id Int?
-  dt_change   DateTime? @default(now()) @db.Timestamp(6)
-  is_del      Int?
-  sp_roles    sp_roles? @relation(fields: [sp_roles_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  sp_tasks    sp_tasks? @relation(fields: [sp_tasks_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+model model {
+  id         Int      @id(map: "model_pk") @default(autoincrement())
+  model_name String?  @db.VarChar
+  device     device[]
+
+  @@index([id])
 }
 
-model sp_tasks {
-  id                                          BigInt              @id @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  plugin_name                                 String?             @db.VarChar(30)
-  caption                                     String?             @db.VarChar
-  image_str                                   String?             @db.VarChar
-  place_x                                     Int?
-  place_y                                     Int?
-  width                                       Int?
-  height                                      Int?
-  description                                 String?             @db.VarChar
-  ignore_access_permitions                    Boolean?
-  is_visible_in_administation                 Boolean?
-  is_visible_in_menu                          Boolean?
-  is_edit_permition_in_administration_present Boolean?
-  sp_roles_rel_task                           sp_roles_rel_task[]
+model monitoring_ton {
+  id             Int         @id(map: "monitoring_ton_pk") @unique(map: "monitoring_ton_id_idx") @default(autoincrement())
+  dt_dimension   DateTime?   @db.Date
+  upper_pressure Int?
+  lower_pressure Int?
+  heart_rate     Int?
+  appointment_id Int
+  appointment    appointment @relation(fields: [appointment_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "monitoring_ton_fk")
 }
 
-model users_db_tokens {
-  id               Int     @id(map: "users_db_tokens_pk") @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  refreshtoken     String? @db.VarChar
-  uirs_users_db_id Int?
+model patient {
+  id                                                      Int                           @id(map: "patient_pk") @unique(map: "patient_id_idx") @default(autoincrement())
+  surname                                                 String?                       @db.VarChar
+  name                                                    String?                       @db.VarChar
+  patronomic_name                                         String?                       @db.VarChar
+  birth_date                                              DateTime?                     @db.Date
+  phone                                                   String?                       @db.VarChar
+  email                                                   String?                       @db.VarChar
+  snils                                                   String?                       @db.VarChar
+  polis                                                   String?                       @db.VarChar
+  full_name                                               String?                       @db.VarChar
+  gender_id                                               Int
+  sp_district_id                                          Int?
+  address                                                 String?                       @db.VarChar
+  doc_id                                                  Int?
+  appointment                                             appointment[]
+  sp_district                                             sp_district?                  @relation(fields: [sp_district_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "patient_district_fk")
+  patient_documents_patient_doc_idTopatient_documents     patient_documents?            @relation("patient_doc_idTopatient_documents", fields: [doc_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "patient_fk")
+  gender                                                  gender                        @relation(fields: [gender_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "patient_gender_fk")
+  patient_anamnesis                                       patient_anamnesis[]
+  patient_documents_patient_documents_patient_idTopatient patient_documents[]           @relation("patient_documents_patient_idTopatient")
+  uirs_users_patients_doctors                             uirs_users_patients_doctors[]
+}
+
+model patient_anamnesis {
+  id         Int      @id(map: "patient_anamnesis_pk") @unique(map: "patient_anamnesis_id_idx") @default(autoincrement())
+  patient_id Int?
+  mkb10_id   Int?
+  patient    patient? @relation(fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "patient_anamnesis_fk")
+  mkb10      mkb10?   @relation(fields: [mkb10_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "patient_anamnesis_fk_1")
+}
+
+model patient_documents {
+  id                                            Int       @id(map: "patient_documents_pk") @unique(map: "patient_documents_id_idx") @default(autoincrement())
+  document_name                                 String?   @db.VarChar
+  document_type_id                              Int?
+  document_number                               String?   @db.VarChar
+  document_date                                 DateTime? @db.Date
+  given_by                                      String?   @db.VarChar
+  patient_id                                    Int?
+  representative_surname                        String?   @db.VarChar
+  representative_name                           String?   @db.VarChar
+  representative_patronomic_name                String?   @db.VarChar
+  representative_birthday                       DateTime? @db.Date
+  representative_snils                          String?   @db.VarChar
+  representative_polis                          String?   @db.VarChar
+  representative_phone                          String?   @db.VarChar
+  representative_address_fact                   String?   @db.VarChar
+  representative_factor                         Int?
+  patient_patient_doc_idTopatient_documents     patient[] @relation("patient_doc_idTopatient_documents")
+  patient_patient_documents_patient_idTopatient patient?  @relation("patient_documents_patient_idTopatient", fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "patient_documents_fk")
+}
+
+model roles {
+  id         Int          @id(map: "roles_pk") @unique(map: "roles_id_idx") @default(autoincrement())
+  role       String?      @db.VarChar
+  uirs_users uirs_users[]
+}
+
+model sp_district {
+  id                   Int                    @id(map: "sp_district_pk") @unique(map: "sp_district_id_idx") @default(autoincrement())
+  name                 String?                @db.VarChar
+  medical_org_district medical_org_district[]
+  patient              patient[]
 }
 
 model uirs_users {
-  id                                       Int                     @id @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  tabel_id                                 String?                 @db.VarChar(16)
-  id_otdel                                 Int?
-  famil                                    String                  @db.VarChar(64)
-  name                                     String                  @db.VarChar(64)
-  otch                                     String                  @db.VarChar(64)
-  phone                                    String?                 @db.VarChar(256)
-  email                                    String?                 @db.VarChar(128)
-  post                                     String?                 @db.VarChar(256)
-  small_name_io_famil                      String?                 @db.VarChar(128)
-  full_name                                String?                 @db.VarChar(128)
-  small_name                               String?                 @db.VarChar(128)
-  post_full                                String?                 @db.VarChar(512)
-  description                              String?                 @db.VarChar(256)
-  is_del                                   Int?                    @db.SmallInt
-  dt_change                                DateTime?               @db.Timestamp(6)
-  uirs_clients_id                          BigInt?
-  small_name_rp                            String?                 @db.VarChar(256)
-  small_name_dp                            String?                 @db.VarChar(256)
-  birthday                                 DateTime?               @db.Date
-  doctor_id                                Int?
-  doctor_doctor_user_insert_idTouirs_users doctor[]                @relation("doctor_user_insert_idTouirs_users")
-  doctor_doctor_user_update_idTouirs_users doctor[]                @relation("doctor_user_update_idTouirs_users")
-  sp_roles                                 sp_roles[]
-  uirs_users_db                            uirs_users_db?
-  uirs_users_log                           uirs_users_log[]
-  uirs_users_properties                    uirs_users_properties[]
+  id                                                                                                 Int                           @id(map: "uirs_users_pk") @unique(map: "uirs_users_id_idx") @default(autoincrement())
+  role_id                                                                                            Int?
+  uirs_users_db_id                                                                                   Int?                          @unique(map: "uirs_users_uirs_users_db_id_idx")
+  uirs_users_patients_doctors_id                                                                     Int?
+  roles                                                                                              roles?                        @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "uirs_users_fk")
+  uirs_users_db_uirs_users_uirs_users_db_idTouirs_users_db                                           uirs_users_db?                @relation("uirs_users_uirs_users_db_idTouirs_users_db", fields: [uirs_users_db_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "uirs_users_fk_1")
+  uirs_users_patients_doctors_uirs_users_uirs_users_patients_doctors_idTouirs_users_patients_doctors uirs_users_patients_doctors?  @relation("uirs_users_uirs_users_patients_doctors_idTouirs_users_patients_doctors", fields: [uirs_users_patients_doctors_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "uirs_users_fk_2")
+  uirs_users_db_uirs_users_db_uirs_users_idTouirs_users                                              uirs_users_db[]               @relation("uirs_users_db_uirs_users_idTouirs_users")
+  uirs_users_patients_doctors_uirs_users_patients_doctors_uirs_users_idTouirs_users                  uirs_users_patients_doctors[] @relation("uirs_users_patients_doctors_uirs_users_idTouirs_users")
 }
 
 model uirs_users_db {
-  id                         Int                          @id @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  login                      String?                      @unique @db.VarChar(32)
-  uirs_users_id              Int?                      @unique
-  is_admin                   Int?
-  is_blocked                 Int?
-  is_boss                    Int?
-  is_secretar                Int?
-  is_system                  Int?
-  password                   String?                      @db.VarChar
-  uirs_users                 uirs_users?                  @relation(fields: [uirs_users_id], references: [id], onDelete: Cascade)
-  uirs_users_db_rel_sp_roles uirs_users_db_rel_sp_roles[]
+  id                                                                Int                   @id(map: "uirs_users_db_pk") @unique(map: "uirs_users_db_id_idx") @default(autoincrement())
+  login                                                             String?               @db.VarChar
+  password                                                          String?               @db.VarChar
+  token_id                                                          Int?
+  uirs_users_id                                                     Int?
+  uirs_users_uirs_users_uirs_users_db_idTouirs_users_db             uirs_users?           @relation("uirs_users_uirs_users_db_idTouirs_users_db")
+  uirs_users_db_tokens_uirs_users_db_token_idTouirs_users_db_tokens uirs_users_db_tokens? @relation("uirs_users_db_token_idTouirs_users_db_tokens", fields: [token_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "uirs_users_db_fk")
+  uirs_users_uirs_users_db_uirs_users_idTouirs_users                uirs_users?           @relation("uirs_users_db_uirs_users_idTouirs_users", fields: [uirs_users_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "uirs_users_db_fk_1")
+  uirs_users_db_tokens_uirs_users_db_tokens_useridTouirs_users_db   uirs_users_db_tokens? @relation("uirs_users_db_tokens_useridTouirs_users_db")
 }
 
-model uirs_users_db_grants {
-  id               BigInt   @id @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  uirs_users_db_id BigInt?
-  sp_type_doc_id   BigInt?
-  is_select        Int?
-  is_insert        Int?
-  is_edit          Int?
-  is_delete        Int?
-  is_access_enable Boolean?
-  is_edit_enable   Boolean?
-  sp_tasks_id      BigInt?
+model uirs_users_db_tokens {
+  id                                                         Int             @id(map: "uirs_users_db_tekens_pk") @unique(map: "uirs_users_db_tekens_id_idx") @default(autoincrement())
+  refreshtoken                                               String?         @unique(map: "uirs_users_db_tokens_refreshtoken_idx") @db.VarChar
+  userid                                                     Int?            @unique(map: "uirs_users_db_tokens_userid_idx")
+  uirs_users_db_uirs_users_db_token_idTouirs_users_db_tokens uirs_users_db[] @relation("uirs_users_db_token_idTouirs_users_db_tokens")
+  uirs_users_db_uirs_users_db_tokens_useridTouirs_users_db   uirs_users_db?  @relation("uirs_users_db_tokens_useridTouirs_users_db", fields: [userid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "uirs_users_db_tokens_fk")
 }
 
-model uirs_users_db_rel_sp_roles {
-  id               BigInt         @id(map: "pk_uirs_users_db_rel_sp_roles") @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  uirs_users_db_id Int?
-  sp_roles_id      Int?
-  dt_change        DateTime?      @default(now()) @db.Timestamp(6)
-  sp_roles         sp_roles?      @relation(fields: [sp_roles_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  uirs_users_db    uirs_users_db? @relation(fields: [uirs_users_db_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model uirs_users_log {
-  id          Int        @id @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  users_id    Int
-  login_date  DateTime?  @db.Timestamp(6)
-  logout_date DateTime?  @db.Timestamp(6)
-  tasks       String?    @db.VarChar(1024)
-  dt_change   DateTime?  @db.Timestamp(6)
-  uirs_users  uirs_users @relation(fields: [users_id], references: [id], onDelete: Cascade)
-}
-
-model uirs_users_properties {
-  id            Int         @id @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  uirs_users_id Int?
-  property      String?
-  value         String?
-  uirs_users    uirs_users? @relation(fields: [uirs_users_id], references: [id], onDelete: Cascade)
-}
-
-model uirs_users_tasks_log {
-  id                Int       @id(map: "pk_uirs_users_tasks_log") @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  action_task       String    @db.VarChar(1024)
-  start_time        DateTime? @db.Timestamp(6)
-  dt_change         DateTime? @db.Timestamp(6)
-  uirs_users_log_id Int?
-  event             String?
-  extrainfo         String?
-
-  @@index([action_task], map: "uirs_users_tasks_log_idx2")
-}
-
-model users_district {
-  id          BigInt @id(map: "pk_users_district") @default(dbgenerated("gen_id('general_id_seq'::text)"))
-  user_id     Int?
-  district_id Int?
+model uirs_users_patients_doctors {
+  id                                                                                Int          @id(map: "uirs_users_patients_doctors_pk") @unique(map: "uirs_users_patients_doctors_id_idx") @default(autoincrement())
+  patient_id                                                                        Int?
+  doctor_id                                                                         Int?
+  uirs_users_id                                                                     Int?
+  uirs_users_uirs_users_uirs_users_patients_doctors_idTouirs_users_patients_doctors uirs_users[] @relation("uirs_users_uirs_users_patients_doctors_idTouirs_users_patients_doctors")
+  patient                                                                           patient?     @relation(fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "uirs_users_patients_doctors_fk")
+  doctor                                                                            doctor?      @relation(fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "uirs_users_patients_doctors_fk_1")
+  uirs_users_uirs_users_patients_doctors_uirs_users_idTouirs_users                  uirs_users?  @relation("uirs_users_patients_doctors_uirs_users_idTouirs_users", fields: [uirs_users_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "uirs_users_patients_doctors_fk_2")
 }

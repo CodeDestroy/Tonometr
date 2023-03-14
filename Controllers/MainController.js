@@ -9,10 +9,13 @@ const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
 const MainService = require("../service/MainService");
 
+const userService = require("../service/user-service");
+
 class MainController {
     
     async getResults(req, res) {
         try {
+            if (!req.body) res.send(Promise.reject())
             const apointment = await prisma.apointment.findFirst({
                 where: {
                     patient_id: 999,
@@ -100,8 +103,24 @@ class MainController {
         res.download(path.join(__dirname, '..' ,'/files/', req.body.data))
     }
 
+    /* async registrationPatient(req, res) {
+        try {
+            const login = req.body.login;
+            const password = req.body.password;
+            const patient_id = req.body.Doctor_id;
+            const userData = await userService.registrationPatient(login, password, patient_id);
+            //res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
+            return res.status(200).json(userData);
+        }
+        catch (e) {
+            console.log(e);
+        }
+    } */
+
     async register (req, res) {
         if (!req.body) res.send(Promise.reject())
+        const login = req.body.login;
+        const password = req.body.password;
         const surname = req.body.secondName;
         const name = req.body.firstName;
         const patronomic_name = req.body.patronomicName;
@@ -114,8 +133,8 @@ class MainController {
         const address = req.body.adress;
         const district = parseInt(req.body.district);
         const newPatient = await MainService.addPatient(surname, name, patronomic_name, phone, email, snils, polis, birth_date, gender, address, district)
-        //console.log(newPatient);
-        res.send(newPatient)
+        const user = await userService.registrationPatient(login, password, newPatient.id)
+        res.send({...newPatient, ...user})
     }
 
     async findPatient (req, res) {

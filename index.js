@@ -12,7 +12,7 @@ global.prisma = new PrismaClient();
 var bodyParser = require('body-parser');
 const mainRouter = require('./router/mainRouter')
 const authRouter = require('./router/authRouter')
-
+const adminRouter = require('./router/adminRouter')
 
 //uses
 app.use(express.static(__dirname));
@@ -31,6 +31,7 @@ app.use(bodyParser.json());
 //routes
 app.use('/', mainRouter);
 app.use('/auth', authRouter)
+app.use('/admin', adminRouter)
 //start
 const start = async () => {
   try {

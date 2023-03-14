@@ -7,6 +7,93 @@ const UserDto = require('../dtos/user-dto')
 
 
 class UserService {
+    
+    async registrationPatient (login, password, patient_id) {
+        try {
+            //find candidate            
+            const candidate = await prisma.uirs_users_db.findMany({
+                where: {
+                    login: login,
+                },
+              })
+              
+            //if user already exists
+            if (candidate.length > 0) {
+                //send error
+                throw ApiError.BadRequest(`Пользователь ${login} уже существует`)
+            }
+
+            //hash password
+            const pass_to_hash = password.valueOf();
+            const hashPassword = bcrypt.hashSync(pass_to_hash, 8);
+            
+            const uirs_users_db =  await prisma.uirs_users_db.create({
+                data: {
+                    login: login,
+                    password: hashPassword
+                },
+            })
+            const uirs_users = await prisma.uirs_users.create({
+                data: {
+                    role_id: 2,
+                    uirs_users_db_id: uirs_users_db.id
+                }
+            })
+            await prisma.uirs_users_db.update({
+                where: {
+                    id: uirs_users_db.id,
+                },
+                data: {
+                    uirs_users_id: uirs_users.id,
+                },
+              })
+
+            const uirs_users_patients_doctors = await prisma.uirs_users_patients_doctors.create({
+                data: {
+                    patient_id: patient_id,
+                    uirs_users_id: uirs_users.id,
+                }
+            });
+            /* if (Doctor_id ) {
+                doctor = await prisma.doctor.findUnique({
+                    where: {
+                        id: parseInt(Doctor_id)
+                    }
+                })
+                uirs_users_patients_doctors = await prisma.uirs_users_patients_doctors.create({
+                    data: {
+                        uirs_users_id: uirs_users.id,
+                        doctor_id: doctor.id
+                    }
+                })
+            }
+            else {
+                uirs_users_patients_doctors = await prisma.uirs_users_patients_doctors.create({
+                    data: {
+                        uirs_users_id: uirs_users.id,
+                    }
+                })
+            } */
+            await prisma.uirs_users.update({
+                where: {
+                    id: uirs_users.id,
+                },
+                data: {
+                    uirs_users_patients_doctors_id: uirs_users_patients_doctors.id,
+                },
+              })
+            //const userDto = await UserDto.deserialize(uirs_users_db, uirs_users, uirs_users_patients_doctors, doctor)
+            //const tokens = tokenService.generateTokens({...userDto});
+            //save token to DB
+            //await tokenService.saveToken(userDto.id, tokens.refreshToken);
+            
+            //return userDto and tokens
+            return { user: uirs_users_db }
+        }
+        catch (e) {
+            console.log(e)
+        }
+    }
     //registration method
     async registration (login, password, User_name, User_surname, User_patronomic, Doctor_id) {
         try {
@@ -108,17 +195,28 @@ class UserService {
                     id: parseInt(uirs_users_db.uirs_users_id),
                 },  
               })  
-              
             const uirs_users_patients_doctors = await prisma.uirs_users_patients_doctors.findFirst({
                 where: {
                     uirs_users_id: uirs_users.id,
                 }
             })
-            const doctor = await prisma.doctor.findUnique({
-                where: {
-                    id: uirs_users_patients_doctors.doctor_id
-                }
-            })
+            let doctor;
+            let patient;
+            if (uirs_users_patients_doctors.doctor_id == null) {
+                patient = await prisma.patient.findUnique({
+                    where: {
+                        id: uirs_users_patients_doctors.patient_id
+                    }
+                })
+            }
+            else {
+                doctor = await prisma.doctor.findUnique({
+                    where: {
+                        id: uirs_users_patients_doctors.doctor_id 
+                    }
+                })
+            }
+            
             //const user = await User.findOne({User_nick: nick});
             
             //check if passwor correct
@@ -127,7 +225,12 @@ class UserService {
             if (!isPassEquals) {
                 throw ApiError.BadRequest(`Пароль неверный`)
             }
-            const userDto = await UserDto.deserialize(uirs_users_db, uirs_users, uirs_users_patients_doctors, doctor)
+            let userDto;
+            if (uirs_users_patients_doctors.doctor_id != null)
+                userDto = await UserDto.deserialize(uirs_users_db, uirs_users, uirs_users_patients_doctors, doctor)
+            else
+                userDto = await UserDto.deserializePatient(uirs_users_db, uirs_users, uirs_users_patients_doctors, patient)
+            //console.log(userDto)
             const tokens = await tokenService.generateTokens({...userDto});
             await tokenService.saveToken(userDto.id, tokens.refreshToken);
             //send answer (user and tokens)
@@ -172,12 +275,33 @@ class UserService {
                     uirs_users_id: uirs_users.id,
                 }
             })
-            const doctor = await prisma.doctor.findUnique({
+            let doctor;
+            let patient;
+            if (uirs_users_patients_doctors.doctor_id == null) {
+                patient = await prisma.patient.findUnique({
+                    where: {
+                        id: uirs_users_patients_doctors.patient_id
+                    }
+                })
+            }
+            else {
+                doctor = await prisma.doctor.findUnique({
+                    where: {
+                        id: uirs_users_patients_doctors.doctor_id 
+                    }
+                })
+            }
+            let userDto;
+            if (uirs_users_patients_doctors.doctor_id != null)
+                userDto = await UserDto.deserialize(uirs_users_db, uirs_users, uirs_users_patients_doctors, doctor)
+            else
+                userDto = await UserDto.deserializePatient(uirs_users_db, uirs_users, uirs_users_patients_doctors, patient)
+            /* const doctor = await prisma.doctor.findUnique({
                 where: {
                     id: uirs_users_patients_doctors.doctor_id
                 }
-            })
-            const userDto = await UserDto.deserialize(uirs_users_db, uirs_users, uirs_users_patients_doctors, doctor)
+            }) */
+            //const userDto = await UserDto.deserialize(uirs_users_db, uirs_users, uirs_users_patients_doctors, doctor)
             const tokens = await tokenService.generateTokens({...userDto});
             
             await tokenService.saveToken(userDto.id, tokens.refreshToken);

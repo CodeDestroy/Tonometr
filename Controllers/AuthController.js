@@ -1,6 +1,7 @@
 const { Prisma, PrismaClient } = require("@prisma/client");
 const { response } = require("express");
 const jwt = require('jsonwebtoken');
+const ApiError = require("../exeptions/api-error");
 
 const userService = require('../service/user-service');
 //const bodyParser = require('body-parser');
@@ -38,17 +39,34 @@ class AuthController {
         }
     }
 
+    /* async registrationPatient(req, res) {
+        try {
+            const login = req.body.login;
+            const password = req.body.password;
+            const patient_id = req.body.Doctor_id;
+            const userData = await userService.registrationPatient(login, password, patient_id);
+            //res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
+            return res.status(200).json(userData);
+        }
+        catch (e) {
+            console.log(e);
+        }
+    } */
+
     async login(req, res) {
         try {
             const User_nick = req.body.login;
             const User_pass = req.body.password;
             const userData = await userService.login(User_nick, User_pass);
+            /* if (!userData)
+                throw ApiError.BadRequest(401,`Пользователь не найден`) */
             res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
             return res.status(200).json(userData);
 
         }
         catch (e) {
             console.log(e);
+            res.status(401).send(`Пользователь не найден`)
         }
     }
 

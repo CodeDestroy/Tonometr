@@ -97,8 +97,9 @@ class MainService {
         }
         
     }
-    async addTonometr(tonometr_id, serialNum) {
+    async addTonometr(tonometr_id, serialNum, deviceName) {
         try {
+            console.log(deviceName)
             const candidate = await prisma.device.findMany({
                 where: {
                   OR: [
@@ -121,7 +122,8 @@ class MainService {
             const newTonometr = await prisma.device.create({
                 data: {
                     serial_number: serialNum,
-                    bluetoth_id: tonometr_id
+                    bluetoth_id: tonometr_id,
+                    name: deviceName,
                 }
             })
             return newTonometr;
@@ -166,7 +168,7 @@ class MainService {
         }
     }
 
-    async addMeasure (sys, dia, pul, device_id, user_id) {
+    async addMeasure (sys, dia, pul, device_id, user_id, deviceName) {
         try {
             const device = await prisma.device.findFirst({
                 where: {
@@ -186,7 +188,7 @@ class MainService {
             console.log(appointment)
             const response = await prisma.monitoring_ton.create({
                 data: {
-                    upper_pressure: sys,
+                    upper_pressure: sys, //1YrnXIpL7MJn1nDPyIv+Cg==  1YrnXIpL7MJn1nDPyIv+Cg==
                     lower_pressure: dia,
                     heart_rate: pul,
                     appointment_id: appointment.id

@@ -21,8 +21,8 @@ class MainController {
             const pul = req.body.PUL;
             const device_id = req.body.deviceId;
             const patient_id = req.body.patient_id;
-
-            const response = await MainService.addMeasure(sys, dia, pul, device_id, patient_id)
+            const deviceName = req.body.deviceName
+            const response = await MainService.addMeasure(sys, dia, pul, device_id, patient_id, deviceName)
             if (response.message != undefined) {
                 throw ApiError.BadRequest(response.message)
             }
@@ -139,7 +139,8 @@ class MainController {
             if (!req.body) res.send(Promise.reject()) 
             const tonometr_id = req.body.tonometr_id
             const serialNum = req.body.serialNum
-            const newTonometr = await MainService.addTonometr(tonometr_id, serialNum)
+            const deviceName = req.body.deviceName
+            const newTonometr = await MainService.addTonometr(tonometr_id, serialNum, deviceName)
             if (newTonometr.message != undefined) {
                 
                 throw ApiError.BadRequest(newTonometr.message)

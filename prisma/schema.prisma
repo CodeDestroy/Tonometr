@@ -60,6 +60,7 @@ model device {
   serial_number String?       @db.VarChar
   model_id      Int?
   bluetoth_id   String?       @db.VarChar
+  name          String?       @db.VarChar
   appointment   appointment[]
   model         model?        @relation(fields: [model_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "device_fk")
 }

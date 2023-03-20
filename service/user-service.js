@@ -98,7 +98,7 @@ class UserService {
             })
             const uirs_users = await prisma.uirs_users.create({
                 data: {
-                    role_id: role,
+                    role_id: parseInt(role),
                     uirs_users_db_id: uirs_users_db.id
                 }
             })

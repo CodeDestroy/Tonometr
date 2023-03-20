@@ -9,6 +9,6 @@ router.post('/registration', AuthController.registration);
 router.post('/logout', AuthController.logout);
 router.get('/refresh', AuthController.refresh);
 
-//router.get('/users', authMiddleware,  authController.getUsers); 
+router.post('/getDoctorByUserId', AuthController.getDoctorByUserId); 
 
 module.exports = router;

@@ -12,7 +12,9 @@ model act {
   type                                         Int?
   act_number                                   String?       @db.VarChar
   act_date                                     DateTime?     @db.Date
+  file_id                                      Int?
   act_type                                     act_type?     @relation(fields: [type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "act_fk")
+  files                                        files?        @relation(fields: [file_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "act_fk_1")
   appointment_appointment_act_return_idToact   appointment[] @relation("appointment_act_return_idToact")
   appointment_appointment_act_transfer_idToact appointment[] @relation("appointment_act_transfer_idToact")
 }
@@ -29,7 +31,6 @@ model appointment {
   doctor_id                            Int
   act_transfer_id                      Int?
   act_return_id                        Int?
-  contact_id                           Int?
   ap_date                              DateTime?        @db.Date
   finished                             String?          @db.VarChar
   sp_district_id                       Int?
@@ -49,13 +50,16 @@ model contract {
   contract_number String?       @db.VarChar
   contract_date   DateTime?     @db.Date
   is_del          String?       @db.VarChar
+  file_id         Int?
   appointment     appointment[]
+  files           files?        @relation(fields: [file_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "contract_fk")
 }
 
 model device {
   id            Int           @id(map: "device_pk") @unique(map: "device_id_idx") @default(autoincrement())
   serial_number String?       @db.VarChar
   model_id      Int?
+  bluetoth_id   String?       @db.VarChar
   appointment   appointment[]
   model         model?        @relation(fields: [model_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "device_fk")
 }
@@ -74,6 +78,7 @@ model doctor {
   gender_id                   Int?
   appointment                 appointment[]
   gender                      gender?                       @relation(fields: [gender_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "doctor_fk")
+  med_post                    med_post?                     @relation(fields: [med_post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "doctor_fk_1")
   uirs_users_patients_doctors uirs_users_patients_doctors[]
 }
 
@@ -89,6 +94,7 @@ model med_post {
   med_post_name  String?      @db.VarChar
   parent_id      Int?
   medical_org_id Int?
+  doctor         doctor[]
   medical_org    medical_org? @relation(fields: [medical_org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "med_post_fk")
   med_post       med_post?    @relation("med_postTomed_post", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "med_post_fk_1")
   other_med_post med_post[]   @relation("med_postTomed_post")
@@ -130,7 +136,7 @@ model model {
 
 model monitoring_ton {
   id             Int         @id(map: "monitoring_ton_pk") @unique(map: "monitoring_ton_id_idx") @default(autoincrement())
-  dt_dimension   DateTime?   @db.Date
+  dt_dimension   DateTime?   @default(now()) @db.Timestamp(6)
   upper_pressure Int?
   lower_pressure Int?
   heart_rate     Int?
@@ -245,4 +251,12 @@ model uirs_users_patients_doctors {
   patient                                                                           patient?     @relation(fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "uirs_users_patients_doctors_fk")
   doctor                                                                            doctor?      @relation(fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "uirs_users_patients_doctors_fk_1")
   uirs_users_uirs_users_patients_doctors_uirs_users_idTouirs_users                  uirs_users?  @relation("uirs_users_patients_doctors_uirs_users_idTouirs_users", fields: [uirs_users_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "uirs_users_patients_doctors_fk_2")
+}
+
+model files {
+  id        Int        @id(map: "files_pk") @unique(map: "files_id_idx") @default(autoincrement())
+  file_name String     @db.VarChar
+  path      String     @db.VarChar
+  act       act[]
+  contract  contract[]
 }

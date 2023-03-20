@@ -26,11 +26,9 @@ class AuthController {
         try {
             const login = req.body.login;
             const password = req.body.password;
-            const User_name = req.body.User_name;
-            const User_surname = req.body.User_surname;
-            const User_patronomic = req.body.User_patronomic;
             const Doctor_id = req.body.Doctor_id;
-            const userData = await userService.registration(login, password, User_name, User_surname, User_patronomic, Doctor_id);
+            const role = req.body.role;
+            const userData = await userService.registration(login, password, Doctor_id, role);
             res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
             return res.status(200).json(userData);
         }
@@ -58,15 +56,17 @@ class AuthController {
             const User_nick = req.body.login;
             const User_pass = req.body.password;
             const userData = await userService.login(User_nick, User_pass);
-            /* if (!userData)
-                throw ApiError.BadRequest(401,`Пользователь не найден`) */
-            res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
-            return res.status(200).json(userData);
-
+            if (userData.message != undefined)
+                throw ApiError.BadRequest(userData.message)
+                //console.log(userData)
+            else {
+                await res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
+                return res.status(200).json(userData);
+            }
         }
         catch (e) {
-            console.log(e);
-            res.status(401).send(`Пользователь не найден`)
+            //console.log(e);
+            res.status(401).send(e.message)
         }
     }
 
@@ -92,6 +92,21 @@ class AuthController {
         }
         catch (e) {
             console.log(e);
+        }
+    }
+
+    async getDoctorByUserId (req, res) {
+        try {
+            const user_id = req.body.user_id;
+            const response = await userService.getDoctorByUserId(user_id)
+            if (response.message != undefined) {
+                throw ApiError.BadRequest(response.message)
+            }
+            else
+                res.send(response)
+        }
+        catch (e) {
+            res.status(401).send(e.message)
         }
     }
 

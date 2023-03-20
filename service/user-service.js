@@ -54,26 +54,6 @@ class UserService {
                     uirs_users_id: uirs_users.id,
                 }
             });
-            /* if (Doctor_id ) {
-                doctor = await prisma.doctor.findUnique({
-                    where: {
-                        id: parseInt(Doctor_id)
-                    }
-                })
-                uirs_users_patients_doctors = await prisma.uirs_users_patients_doctors.create({
-                    data: {
-                        uirs_users_id: uirs_users.id,
-                        doctor_id: doctor.id
-                    }
-                })
-            }
-            else {
-                uirs_users_patients_doctors = await prisma.uirs_users_patients_doctors.create({
-                    data: {
-                        uirs_users_id: uirs_users.id,
-                    }
-                })
-            } */
             await prisma.uirs_users.update({
                 where: {
                     id: uirs_users.id,
@@ -82,11 +62,7 @@ class UserService {
                     uirs_users_patients_doctors_id: uirs_users_patients_doctors.id,
                 },
               })
-            //const userDto = await UserDto.deserialize(uirs_users_db, uirs_users, uirs_users_patients_doctors, doctor)
-            //const tokens = tokenService.generateTokens({...userDto});
-            //save token to DB
-            //await tokenService.saveToken(userDto.id, tokens.refreshToken);
-            
+
             //return userDto and tokens
             return { user: uirs_users_db }
         }
@@ -95,7 +71,7 @@ class UserService {
         }
     }
     //registration method
-    async registration (login, password, User_name, User_surname, User_patronomic, Doctor_id) {
+    async registration (login, password, Doctor_id, role) {
         try {
             //find candidate            
             const candidate = await prisma.uirs_users_db.findMany({
@@ -122,7 +98,7 @@ class UserService {
             })
             const uirs_users = await prisma.uirs_users.create({
                 data: {
-                    role_id: 3,
+                    role_id: role,
                     uirs_users_db_id: uirs_users_db.id
                 }
             })
@@ -188,7 +164,13 @@ class UserService {
               })
             //if user doesnt exist
             if (!uirs_users_db) {
-                throw ApiError.BadRequest(`Пользователь ${nick} не найден`)
+                return ApiError.BadRequest(`Пользователь ${nick} не найден`)
+            }
+            //check if passwor correct
+            const isPassEquals = await bcrypt.compare(pass, uirs_users_db.password);
+            //if not
+            if (!isPassEquals) {
+                return ApiError.BadRequest(`Пароль неверный`)
             }
             const uirs_users = await prisma.uirs_users.findUnique({
                 where: {
@@ -219,12 +201,7 @@ class UserService {
             
             //const user = await User.findOne({User_nick: nick});
             
-            //check if passwor correct
-            const isPassEquals = await bcrypt.compare(pass, uirs_users_db.password);
-            //if not
-            if (!isPassEquals) {
-                throw ApiError.BadRequest(`Пароль неверный`)
-            }
+            
             let userDto;
             if (uirs_users_patients_doctors.doctor_id != null)
                 userDto = await UserDto.deserialize(uirs_users_db, uirs_users, uirs_users_patients_doctors, doctor)
@@ -307,6 +284,23 @@ class UserService {
             await tokenService.saveToken(userDto.id, tokens.refreshToken);
             //if all is ok - return user and new tokens
             return { ...tokens, user: userDto }
+        }
+        catch (e) {
+            console.log(e)
+        }
+    }
+
+    async getDoctorByUserId (user_id) {
+        try {
+            const response = await prisma.$queryRaw`
+            select d.*, mp.med_post_name as med_post, mp.parent_id as parent_med_post_id
+            from appointment a 
+            join doctor d on a.doctor_id = d.id
+            join med_post mp on d.med_post_id = mp.id 
+            where a.patient_id = ${user_id}
+            order by a.id desc 
+            limit 1`
+            return response;
         }
         catch (e) {
             console.log(e)

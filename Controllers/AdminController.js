@@ -11,6 +11,7 @@ const MainService = require("../service/MainService");
 const ApiError = require("../exeptions/api-error");
 const adminService = require("../service/admin-service");
 
+
 class MainController {
     
     async showAllUsers(req, res) {
@@ -23,6 +24,19 @@ class MainController {
         }
         catch (e) {
             console.log(e);
+        }
+    }
+
+    async findUsers(req, res) {
+        try {
+            if (!req.body) res.send(Promise.reject());
+            const label = req.body.label;
+            const choice = req.body.choice;
+            const users = await adminService.findUsers(label, choice)
+            res.send(users)
+        }
+        catch(e) {
+
         }
     }
     

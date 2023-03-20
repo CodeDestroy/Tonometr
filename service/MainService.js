@@ -60,38 +60,208 @@ class MainService {
     }
 
     async findPatient (label, choice) {
-        let patients;
-        switch (choice) {
-            case '0':
-                patients = await prisma.patient.findMany({
-                    where: {
-                        full_name: label,
-                    },
-                  })
-                break;
-            case '1':
-                patients = await prisma.patient.findMany({
-                    where: {
-                        polis: label,
-                    },
-                  })
-                break;
-            case '2':
-                patients = await prisma.patient.findMany({
-                    where: {
-                        snils: label,
-                    },
-                  })
-                break;
-            default:
-                throw ApiError.BadRequest(`Нет параметров для поиска!`)
+        try {
+            let patients;
+            switch (choice) {
+                case '0':
+                    patients = await prisma.patient.findMany({
+                        where: {
+                            full_name: label,
+                        },
+                      })
+                    break;
+                case '1':
+                    patients = await prisma.patient.findMany({
+                        where: {
+                            polis: label,
+                        },
+                      })
+                    break;
+                case '2':
+                    patients = await prisma.patient.findMany({
+                        where: {
+                            snils: label,
+                        },
+                      })
+                    break;
+                default:
+                    throw ApiError.BadRequest(`Нет параметров для поиска!`)
+            }
+            patients.forEach(patient => {
+                patient.gender = parseInt(patient.gender)
+            });
+            return patients;
         }
-        patients.forEach(patient => {
-            patient.gender = parseInt(patient.gender)
-        });
-        return patients;
+        catch (e) {
+            console.log(e)
+        }
+        
+    }
+    async addTonometr(tonometr_id, serialNum) {
+        try {
+            const candidate = await prisma.device.findMany({
+                where: {
+                  OR: [
+                    {
+                        bluetoth_id: {
+                            equals: tonometr_id,
+                      },
+                    },
+                    {
+                        serial_number: {
+                            equals: serialNum,
+                        }
+                    },
+                  ],
+                },
+              })
+            if (candidate.length > 0) {
+                return ApiError.BadRequest(`Тонометр уже был внесён в базу`)
+            }
+            const newTonometr = await prisma.device.create({
+                data: {
+                    serial_number: serialNum,
+                    bluetoth_id: tonometr_id
+                }
+            })
+            return newTonometr;
+        }
+        catch (e) {
+            console.log(e)
+        }
     }
 
+    async findTonometrByBtId (device_bt_id) {
+        try {
+            const candidate = await prisma.device.findFirst({
+                where: {
+                    bluetoth_id: device_bt_id
+                }
+            })
+            
+            if (!candidate) {
+                return ApiError.BadRequest(`Тонометр не найден, пожалуйста, зарегистрируйте устройство`)
+            }
+            return candidate
+        }
+        catch (e) {
+            console.log(e)
+        }
+    }
+
+    async addAppointment (patient_id, doctor_id, device_id) {
+        try {
+            const appointment = await prisma.appointment.create({
+                data: {
+                    patient_id: patient_id,
+                    doctor_id: doctor_id,
+                    ap_date: new Date(),
+                    device_id: device_id
+                }
+            })
+            return appointment
+        }
+        catch (e) {
+            console.log(e)
+        }
+    }
+
+    async addMeasure (sys, dia, pul, device_id, user_id) {
+        try {
+            const device = await prisma.device.findFirst({
+                where: {
+                    bluetoth_id: device_id
+                }
+            })
+            console.log(device_id)
+            const appointment = await prisma.appointment.findFirst({
+                where: {
+                    patient_id: user_id,
+                    /* device_id: device.id, */
+                },
+                orderBy: {
+                    ap_date: 'desc',
+                },
+            })
+            console.log(appointment)
+            const response = await prisma.monitoring_ton.create({
+                data: {
+                    upper_pressure: sys,
+                    lower_pressure: dia,
+                    heart_rate: pul,
+                    appointment_id: appointment.id
+                }
+            })
+            console.log(response)
+            return response
+        }
+        catch (e) {
+            console.log(e)
+        }
+    }
+
+    async getAllMeasuresByPatientId (patient_id, page, order) {
+        try {
+            const offset = (page - 1) * 10;
+            let orderBy;
+            let asc_desc;
+            switch (order) {
+                case 'dt_dimension_desc':
+                    orderBy = `mt.dt_dimension`
+                    asc_desc = 'desc'
+                    break;
+                case 'dt_dimension_asc':
+                    orderBy = `mt.dt_dimension`
+                    asc_desc = 'asc'
+                    break;
+                case 'upper_pressure_desc':
+                    orderBy = `mt.upper_pressure`
+                    asc_desc = 'desc'
+                    break;
+                case 'upper_pressure_asc':
+                    orderBy = `mt.upper_pressure`
+                    asc_desc = 'asc'
+                    break;
+                case 'lower_pressure_desc': 
+                    orderBy = `mt.lower_pressure`
+                    asc_desc = 'desc'
+                    break;  
+                case 'lower_pressure_asc': 
+                    orderBy = `mt.lower_pressure`
+                    asc_desc = 'asc'
+                    break; 
+                case 'heart_rate_desc': 
+                    orderBy = `mt.heart_rate`
+                    asc_desc = 'desc'
+                    break; 
+                case 'heart_rate_asc': 
+                    orderBy = `mt.heart_rate`
+                    asc_desc = 'asc'
+                    break; 
+                case 'id_asc' :
+                    orderBy = `mt.id`
+                    asc_desc = 'asc'
+                    break;
+                case 'id_desc' :
+                    orderBy = `mt.id`
+                    asc_desc = 'desc'
+                    break;
+                default: 
+                    orderBy = `mt.dt_dimension`
+                    asc_desc = `desc`
+                    break;
+            }
+            const response = await prisma.$queryRawUnsafe(`select * from appointment a    
+                                                    join monitoring_ton mt on a.id = mt.appointment_id 
+                                                    where a.patient_id = ${patient_id} 
+                                                    order by ${orderBy} ${asc_desc}
+                                                    limit 10 offset ${offset}`)
+            return response;
+        }
+        catch (e) {
+            console.log(e)
+        }
+    }
 }
 
 

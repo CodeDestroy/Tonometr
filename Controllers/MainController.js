@@ -78,33 +78,11 @@ class MainController {
         console.log(pathToSave)
         fs.writeFileSync(path.resolve(pathToSave, savedName), buf);
         res.send(savedName)
-        /* const name = `${Date.now()}_result.pdf`
-        pathToFile = path.join(__dirname, '..', '/files/' + name) 
-        pdf.create(testPDF(req.body), {}).toFile(pathToFile, (err) => {
-            if(err) {
-                res.send(Promise.reject());
-            }
-            res.send(pathToFile);
-        }); */
     }
     async fetchPDF(req, res) {
         if (!req.body) res.send(Promise.reject())
         res.download(path.join(__dirname, '..' ,'/files/', req.body.data))
     }
-
-    /* async registrationPatient(req, res) {
-        try {
-            const login = req.body.login;
-            const password = req.body.password;
-            const patient_id = req.body.Doctor_id;
-            const userData = await userService.registrationPatient(login, password, patient_id);
-            //res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
-            return res.status(200).json(userData);
-        }
-        catch (e) {
-            console.log(e);
-        }
-    } */
 
     async register (req, res) {
         if (!req.body) res.send(Promise.reject())
@@ -208,8 +186,7 @@ class MainController {
             }
             else {
                 res.send(response)
-            }
-                
+            }      
         }
         catch (e) {
             console.log(e)
@@ -231,6 +208,21 @@ class MainController {
             }
             else {
                 response[0].count = parseInt(response[0].count)
+                res.send(response)
+            }
+        }
+        catch (e) {
+            res.status(401).send(e.message)
+        }
+    }
+
+    async getDistricts(req, res) {
+        try {
+            const response = await prisma.sp_district.findMany({})
+            if (response.message != undefined) {
+                throw ApiError.BadRequest(response.message)
+            }
+            else {
                 res.send(response)
             }
         }

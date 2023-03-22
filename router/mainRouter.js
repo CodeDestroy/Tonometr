@@ -18,4 +18,6 @@ router.post('/addAppointment', MainController.addAppointment)
 router.post('/getCountMeasuresByPatientId', MainController.getCountMeasuresByPatientId)
 router.post('/getAllMeasuresByPatientId', MainController.getAllMeasuresByPatientId)
 
+router.get('/getDistricts', MainController.getDistricts)
+
 module.exports = router;

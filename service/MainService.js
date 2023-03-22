@@ -153,6 +153,7 @@ class MainService {
 
     async addAppointment (patient_id, doctor_id, device_id) {
         try {
+            console.log(patient_id, doctor_id, device_id)
             const appointment = await prisma.appointment.create({
                 data: {
                     patient_id: patient_id,

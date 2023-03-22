@@ -36,7 +36,17 @@ class MainController {
             res.send(users)
         }
         catch(e) {
+            console.log(e)
+        }
+    }
 
+    async getCountUsers (req, res) {
+        try {
+            const users = await prisma.uirs_users_db.findMany({})
+            res.send(users)
+        }
+        catch(e) {
+            console.log(e)
         }
     }
     

@@ -292,14 +292,15 @@ class UserService {
 
     async getDoctorByUserId (user_id) {
         try {
-            const response = await prisma.$queryRaw`
+            console.log(user_id)
+            const response = await prisma.$queryRawUnsafe(`
             select d.*, mp.med_post_name as med_post, mp.parent_id as parent_med_post_id
             from appointment a 
             join doctor d on a.doctor_id = d.id
             join med_post mp on d.med_post_id = mp.id 
             where a.patient_id = ${user_id}
             order by a.id desc 
-            limit 1`
+            limit 1`)
             return response;
         }
         catch (e) {

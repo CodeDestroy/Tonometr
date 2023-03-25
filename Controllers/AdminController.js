@@ -19,7 +19,8 @@ class MainController {
             if (!req.body) res.send(Promise.reject());
             const page = req.body.page;
             const count = req.body.count;
-            const users = await adminService.showAllUsers(page, count)
+            const selectedList = req.body.selectedList
+            const users = await adminService.showAllUsers(page, count, selectedList)
             res.send(users)
         }
         catch (e) {
@@ -49,10 +50,6 @@ class MainController {
             console.log(e)
         }
     }
-    
-    
-
-
 
 }
 module.exports = new MainController();

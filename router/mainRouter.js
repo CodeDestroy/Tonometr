@@ -16,8 +16,16 @@ router.post('/findTonometrByBtId', MainController.findTonometrByBtId)
 
 router.post('/addAppointment', MainController.addAppointment)
 router.post('/getCountMeasuresByPatientId', MainController.getCountMeasuresByPatientId)
-router.post('/getAllMeasuresByPatientId', MainController.getAllMeasuresByPatientId)
+router.post('/getCountMeasuresByDoctorId', MainController.getCountMeasuresByDoctorId)
 
+
+router.post('/getCountPatientsByDoctorId', MainController.getCountPatientsByDoctorId)
+router.post('/getPatientsByDoctorId', MainController.getPatientsByDoctorId)
+
+router.post('/getAllMeasuresByPatientId', MainController.getAllMeasuresByPatientId)
+router.post('/getMesuaresByDoctorId', MainController.getMesuaresByDoctorId)
 router.get('/getDistricts', MainController.getDistricts)
+
+
 
 module.exports = router;

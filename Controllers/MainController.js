@@ -216,6 +216,50 @@ class MainController {
         }
     }
 
+    async getCountMeasuresByDoctorId (req, res) {
+        try {
+            if (!req.body) res.send(Promise.reject());
+            const doctor_id = req.body.doctor_id;
+            const response = await prisma.$queryRaw`select count(a.id) from appointment a    
+                                join monitoring_ton mt on a.id = mt.appointment_id 
+                                where a.doctor_id = ${doctor_id} 
+                                group by a.id`
+            if (response.message != undefined) {
+                throw ApiError.BadRequest(response.message)
+            }
+            else {
+                response[0].count = parseInt(response[0].count)
+                res.send(response)
+            }
+        }
+        catch (e) {
+            res.status(401).send(e.message)
+        }
+    }
+
+    async getCountPatientsByDoctorId (req, res) {
+        try {
+            if (!req.body) res.send(Promise.reject());
+            const doctor_id = req.body.doctor_id;
+            console.log(doctor_id)
+            const response = await prisma.$queryRaw`select count(p.id) from patient p    
+                                        join appointment a on a.patient_id = p.id 
+                                        where a.doctor_id = ${doctor_id} 
+                                        group by p.id`
+            
+            if (response.message != undefined) {
+                throw ApiError.BadRequest(response.message)
+            }
+            else {
+                response[0].count = parseInt(response[0].count)
+                res.send(response)
+            }
+        }
+        catch (e) {
+            res.status(401).send(e.message)
+        }
+    }
+
     async getDistricts(req, res) {
         try {
             const response = await prisma.sp_district.findMany({})
@@ -228,6 +272,50 @@ class MainController {
         }
         catch (e) {
             res.status(401).send(e.message)
+        }
+    }
+
+    async getPatientsByDoctorId (req, res) {
+        try {
+            if (!req.body) res.send(Promise.reject());
+            const doctor_id = req.body.doctor_id;
+            const page = req.body.currentPage;
+            const order = req.body.order;
+            const response = await MainService.getPatientsByDoctorId(doctor_id, page, order)
+            /* const response = await prisma.$queryRaw`select p.* from appointment a    
+                                join patient p on a.patient_id = p.id 
+                                where a.doctor_id = ${doctor_id} 
+                                group by p.id` */
+            if (response.message != undefined) {
+                throw ApiError.BadRequest(response.message)
+            }
+            else {
+                response[0].count = parseInt(response[0].count)
+                res.send(response)
+            }
+        }
+        catch (e) {
+            res.status(401).send(e.message)
+        }
+    }
+
+    async getMesuaresByDoctorId (req, res) {
+        try {
+            if (!req.body) res.send(Promise.reject());
+            const doctor_id = req.body.doctor_id;
+            const page = req.body.currentPage;
+            const order = req.body.order;
+            const response = await MainService.getMesuaresByDoctorId(doctor_id, page, order);
+            /* const response = await prisma.$queryRaw`select p.*, a.*, mt.*
+                from doctor d 
+                join appointment a on a.doctor_id = d.id 
+                join patient p on p.id = a.patient_id
+                join monitoring_ton mt on mt.appointment_id = a.id 
+                where d.id = ${doctor_id}` */
+            res.send(response)
+        }
+        catch (e) {
+            console.log(e)
         }
     }
 }

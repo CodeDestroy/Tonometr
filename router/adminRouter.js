@@ -7,5 +7,4 @@ router.post('/showAllUsers', AdminController.showAllUsers);
 
 router.post('/findUsers', AdminController.findUsers)
 router.get('/getCountUsers',  AdminController.getCountUsers); 
-
 module.exports = router;

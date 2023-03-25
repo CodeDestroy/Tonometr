@@ -265,6 +265,139 @@ class MainService {
             console.log(e)
         }
     }
+
+    async getMesuaresByDoctorId (doctor_id, page, order) {
+        try {
+            const offset = (page - 1) * 10;
+            let orderBy;
+            let asc_desc;
+            switch (order) {
+                case 'full_name_desc':
+                    orderBy = `p.full_name`
+                    asc_desc = 'desc'
+                    break;
+                case 'full_name_asc':
+                    orderBy = `p.full_name`
+                    asc_desc = 'asc'
+                    break;
+                case 'dt_dimension_desc':
+                    orderBy = `mt.dt_dimension`
+                    asc_desc = 'desc'
+                    break;
+                case 'dt_dimension_asc':
+                    orderBy = `mt.dt_dimension`
+                    asc_desc = 'asc'
+                    break;
+                case 'upper_pressure_desc':
+                    orderBy = `mt.upper_pressure`
+                    asc_desc = 'desc'
+                    break;
+                case 'upper_pressure_asc':
+                    orderBy = `mt.upper_pressure`
+                    asc_desc = 'asc'
+                    break;
+                case 'lower_pressure_desc': 
+                    orderBy = `mt.lower_pressure`
+                    asc_desc = 'desc'
+                    break;  
+                case 'lower_pressure_asc': 
+                    orderBy = `mt.lower_pressure`
+                    asc_desc = 'asc'
+                    break; 
+                case 'heart_rate_desc': 
+                    orderBy = `mt.heart_rate`
+                    asc_desc = 'desc'
+                    break; 
+                case 'heart_rate_asc': 
+                    orderBy = `mt.heart_rate`
+                    asc_desc = 'asc'
+                    break; 
+                case 'id_asc' :
+                    orderBy = `mt.id`
+                    asc_desc = 'asc'
+                    break;
+                case 'id_desc' :
+                    orderBy = `mt.id`
+                    asc_desc = 'desc'
+                    break;
+                default: 
+                    orderBy = `mt.dt_dimension`
+                    asc_desc = `desc`
+                    break;
+            }
+            const response = await prisma.$queryRawUnsafe(`select p.*, a.*, mt.*
+                from doctor d 
+                join appointment a on a.doctor_id = d.id 
+                join patient p on p.id = a.patient_id
+                join monitoring_ton mt on mt.appointment_id = a.id 
+                where d.id = ${doctor_id}
+                order by ${orderBy} ${asc_desc}
+                limit 10 offset ${offset}`)
+            return response;
+        }
+        catch (e) {
+            console.log(e)
+        }
+    }
+
+    
+
+    async getPatientsByDoctorId (doctor_id, page, order) {
+        try {
+            const offset = (page - 1) * 10;
+            let orderBy;
+            let asc_desc;
+            switch (order) {
+                case 'full_name_desc':
+                    orderBy = `p.full_name`
+                    asc_desc = 'desc'
+                    break;
+                case 'full_name_asc':
+                    orderBy = `p.full_name`
+                    asc_desc = 'asc'
+                    break;
+                default: 
+                    orderBy = `a.id`
+                    asc_desc = `desc`
+                    break;
+            }
+
+            /* 
+            
+            select p.*
+            from doctor d 
+            join appointment a on a.doctor_id = d.id 
+            join patient p on p.id = a.patient_id
+            join monitoring_ton mt on mt.appointment_id = a.id 
+            where d.id = 1
+            group by p.full_name, p.id
+            order by full_name desc
+            limit 10 offset 0
+            
+            */
+           console.log(order)
+            const response = await prisma.$queryRawUnsafe(`select p.*, a.*
+                from doctor d 
+                join appointment a on a.doctor_id = d.id 
+                join patient p on p.id = a.patient_id
+                where d.id = ${doctor_id}
+                group by p.full_name, p.id, a.id
+                order by ${orderBy} ${asc_desc}
+                limit 10 offset ${offset}`)
+            /* const response = await prisma.$queryRawUnsafe(`select p.*, a.*, mt.*
+                from doctor d 
+                join appointment a on a.doctor_id = d.id 
+                join patient p on p.id = a.patient_id
+                join monitoring_ton mt on mt.appointment_id = a.id 
+                where d.id = ${doctor_id}
+                order by ${orderBy} ${asc_desc}
+                limit 10 offset ${offset}`) */
+            return response;
+        }
+        catch (e) {
+            console.log(e)
+        }
+    }
 }
 
 

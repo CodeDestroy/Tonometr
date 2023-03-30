@@ -97,9 +97,50 @@ class MainService {
         }
         
     }
+
+    async findPatinetByChoiceAndDoctorId (label, choice, doctor_id) {
+        try {
+            let patients;
+            switch (choice) {
+                case '0':
+                    patients = await prisma.$queryRawUnsafe(`
+                        select a.*, p.*, d.full_name as d_full_name
+                        from appointment a
+                        join patient p on a.patient_id = p.id 
+                        join doctor d on d.id = a.doctor_id
+                        where p.full_name like '%${label}%'`)
+                    break;
+                case '1':
+                    patients = await prisma.$queryRawUnsafe(`
+                        select a.*, p.*, d.full_name as d_full_name
+                        from appointment a
+                        join patient p on a.patient_id = p.id 
+                        join doctor d on d.id = a.doctor_id
+                        where p.polis like '%${label}%'`)
+                    break;
+                case '2':
+                    patients = await prisma.$queryRawUnsafe(`
+                        select a.*, p.*, d.full_name as d_full_name
+                        from appointment a 
+                        join patient p on a.patient_id = p.id 
+                        join doctor d on d.id = a.doctor_id
+                        where p.snils like '%${label}%'`)
+                    break;
+                default:
+                    throw ApiError.BadRequest(`Нет параметров для поиска!`)
+            }
+            patients.forEach(patient => {
+                patient.gender = parseInt(patient.gender)
+            });
+            return patients;
+        }
+        catch (e) {
+            console.log(e)
+        }
+    }
+
     async addTonometr(tonometr_id, serialNum, deviceName) {
         try {
-            console.log(deviceName)
             const candidate = await prisma.device.findMany({
                 where: {
                   OR: [
@@ -153,7 +194,6 @@ class MainService {
 
     async addAppointment (patient_id, doctor_id, device_id) {
         try {
-            console.log(patient_id, doctor_id, device_id)
             const appointment = await prisma.appointment.create({
                 data: {
                     patient_id: patient_id,
@@ -176,7 +216,6 @@ class MainService {
                     bluetoth_id: device_id
                 }
             })
-            console.log(device_id)
             const appointment = await prisma.appointment.findFirst({
                 where: {
                     patient_id: user_id,
@@ -186,7 +225,6 @@ class MainService {
                     ap_date: 'desc',
                 },
             })
-            console.log(appointment)
             const response = await prisma.monitoring_ton.create({
                 data: {
                     upper_pressure: sys, //1YrnXIpL7MJn1nDPyIv+Cg==  1YrnXIpL7MJn1nDPyIv+Cg==
@@ -195,7 +233,6 @@ class MainService {
                     appointment_id: appointment.id
                 }
             })
-            console.log(response)
             return response
         }
         catch (e) {
@@ -375,7 +412,6 @@ class MainService {
             limit 10 offset 0
             
             */
-           console.log(order)
             const response = await prisma.$queryRawUnsafe(`select p.*, a.*
                 from doctor d 
                 join appointment a on a.doctor_id = d.id 
@@ -395,6 +431,30 @@ class MainService {
             return response;
         }
         catch (e) {
+            console.log(e)
+        }
+    }
+
+    async getAllMeasuresByPatientIdWithDataFormat (patient_id, dateStart, dateEnd) {
+        try {
+            const id = parseInt(patient_id)
+
+            const startDate = new Date(dateStart)
+            const endDate = new Date(dateEnd)
+            const startTime = startDate.setHours(startDate.getHours()+3)
+            const endTime = endDate.setHours(endDate.getHours()+3)
+            const start = new Date(startTime);
+            const end = new Date(endTime);
+            console.log(start, end)
+            const response = await prisma.$queryRaw`select *
+                from monitoring_ton mt 
+                join appointment a on mt.appointment_id = a.id 
+                join patient p on a.patient_id = p.id 
+                where p.id = ${id} and mt.dt_dimension >= ${start} and mt.dt_dimension <= ${end}
+                order by mt.dt_dimension`
+            return response
+        }
+        catch(e) {
             console.log(e)
         }
     }

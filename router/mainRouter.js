@@ -10,6 +10,7 @@ router.post('/getResults', MainController.getResults);
 
 router.post('/reg-patient', MainController.register)
 router.post('/findPatientByChoice', MainController.findPatient)
+router.post('/findPatinetByChoiceAndDoctorId', MainController.findPatinetByChoiceAndDoctorId)
 
 router.post('/addTonometr', MainController.addTonometr)
 router.post('/findTonometrByBtId', MainController.findTonometrByBtId)
@@ -26,6 +27,8 @@ router.post('/getAllMeasuresByPatientId', MainController.getAllMeasuresByPatient
 router.post('/getMesuaresByDoctorId', MainController.getMesuaresByDoctorId)
 router.get('/getDistricts', MainController.getDistricts)
 
+
+router.post('/getAllMeasuresByPatientIdWithDataFormat', MainController.getAllMeasuresByPatientIdWithDataFormat)
 
 
 module.exports = router;

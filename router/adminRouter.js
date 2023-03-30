@@ -7,4 +7,6 @@ router.post('/showAllUsers', AdminController.showAllUsers);
 
 router.post('/findUsers', AdminController.findUsers)
 router.get('/getCountUsers',  AdminController.getCountUsers); 
+
+router.post('/saveChangesToPatient', AdminController.saveChangesToPatient)
 module.exports = router;

@@ -297,7 +297,7 @@ class UserService {
             select d.*, mp.med_post_name as med_post, mp.parent_id as parent_med_post_id
             from appointment a 
             join doctor d on a.doctor_id = d.id
-            join med_post mp on d.med_post_id = mp.id 
+            left join med_post mp on d.med_post_id = mp.id 
             where a.patient_id = ${user_id}
             order by a.id desc 
             limit 1`)

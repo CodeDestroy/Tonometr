@@ -69,7 +69,35 @@ class AdminService {
             return users
         }
         catch (e) {
+            console.log(e)
+        }
+    }
 
+    async saveChangesToPatient (user) {
+        try {
+            /* console.log(user) */var date = new Date(user.birthDate);
+            const updatedPatient = await prisma.patient.update({
+                where: {
+                    id: user.p_id,
+                },
+                data: {
+                    surname: user.secondName,
+                    name: user.firstName,
+                    patronomic_name: user.patronomicName,
+                    birth_date: date,
+                    phone: ('+7 '+ user.phone),
+                    email: user.email,
+                    snils: user.snils,
+                    polis: user.polis,
+                    full_name: (user.secondName + ' ' + user.firstName + ' ' + user.patronomicName),
+                    sp_district_id: user.district,
+                    address: user.address
+                },
+              })
+            return updatedPatient;
+        }
+        catch (e) {
+            console.log(e)
         }
     }
 

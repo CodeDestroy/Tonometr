@@ -51,5 +51,19 @@ class MainController {
         }
     }
 
+    async saveChangesToPatient (req, res) {
+        try {
+            if (!req.body) res.send(Promise.reject());
+            const user = req.body.user;
+            /* console.log(req.body) */
+            /* console.log(user) */
+            const response = await adminService.saveChangesToPatient(user)
+            res.send(response)
+        }
+        catch (e) {
+            console.log(e)
+        }
+    }
+
 }
 module.exports = new MainController();

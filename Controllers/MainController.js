@@ -10,6 +10,7 @@ const Docxtemplater = require("docxtemplater");
 const MainService = require("../service/MainService");
 
 const userService = require("../service/user-service");
+const { parse } = require("path");
 
 class MainController {
     
@@ -105,11 +106,31 @@ class MainController {
     }
 
     async findPatient (req, res) {
-        if (!req.body) res.send(Promise.reject()) 
-        const label = req.body.label;
-        const choice = req.body.choice;
-        const patients = await MainService.findPatient(label, choice)
-        res.send(patients)
+        try {
+            if (!req.body) res.send(Promise.reject()) 
+            const label = req.body.label;
+            const choice = req.body.choice;
+            const patients = await MainService.findPatient(label, choice)
+            res.send(patients)
+        }
+        catch (e) {
+            console.log(e)
+        }
+        
+    }
+
+    async findPatinetByChoiceAndDoctorId (req, res) {
+        try {
+            if (!req.body) res.send(Promise.reject()) 
+            const label = req.body.label;
+            const choice = req.body.choice;
+            const doctor_id = req.body.doctor_id
+            const patients = await MainService.findPatinetByChoiceAndDoctorId(label, choice, doctor_id)
+            res.send(patients)
+        }
+        catch (e) {
+            console.log(e)
+        }
     }
 
     async addTonometr (req, res) {
@@ -244,13 +265,16 @@ class MainController {
             console.log(doctor_id)
             const response = await prisma.$queryRaw`select count(p.id) from patient p    
                                         join appointment a on a.patient_id = p.id 
-                                        where a.doctor_id = ${doctor_id} 
-                                        group by p.id`
-            
+                                        where a.doctor_id = ${doctor_id}` 
+                                        //group by p.id`
+            console.log(response)
             if (response.message != undefined) {
                 throw ApiError.BadRequest(response.message)
             }
             else {
+                for (let i = 0; i < response.length; i++) {
+                    response[i].count = parseInt(response[i].count)
+                }
                 response[0].count = parseInt(response[0].count)
                 res.send(response)
             }
@@ -312,6 +336,20 @@ class MainController {
                 join patient p on p.id = a.patient_id
                 join monitoring_ton mt on mt.appointment_id = a.id 
                 where d.id = ${doctor_id}` */
+            res.send(response)
+        }
+        catch (e) {
+            console.log(e)
+        }
+    }
+
+    async getAllMeasuresByPatientIdWithDataFormat (req, res) {
+        try {
+            if (!req.body) res.send(Promise.reject());
+            const patient_id = req.body.patient_id;
+            const dateStart = req.body.dateStart;
+            const dateEnd = req.body.dateEnd;
+            const response = await MainService.getAllMeasuresByPatientIdWithDataFormat(patient_id, dateStart, dateEnd)
             res.send(response)
         }
         catch (e) {

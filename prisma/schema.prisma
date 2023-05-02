@@ -10,7 +10,7 @@ datasource db {
 model act {
   id                                           Int           @id(map: "act_pk") @unique(map: "act_id_idx") @default(autoincrement())
   type                                         Int?
-  act_number                                   String?       @db.VarChar
+  act_number                                   String?       @default(dbgenerated("nextval('act_id_seq'::regclass)")) @db.VarChar
   act_date                                     DateTime?     @db.Date
   file_id                                      Int?
   act_type                                     act_type?     @relation(fields: [type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "act_fk")
@@ -47,7 +47,7 @@ model appointment {
 
 model contract {
   id              Int           @id(map: "contract_pk") @unique(map: "contract_id_idx") @default(autoincrement())
-  contract_number String?       @db.VarChar
+  contract_number String?       @default(dbgenerated("nextval('contract_id_seq'::regclass)")) @db.VarChar
   contract_date   DateTime?     @db.Date
   is_del          String?       @db.VarChar
   file_id         Int?
@@ -77,9 +77,12 @@ model doctor {
   med_post_id                 Int?
   full_name                   String?                       @db.VarChar
   gender_id                   Int?
+  rir_id                      String?                       @db.VarChar
+  rir_snils                   String?                       @db.VarChar
   appointment                 appointment[]
   gender                      gender?                       @relation(fields: [gender_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "doctor_fk")
   med_post                    med_post?                     @relation(fields: [med_post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "doctor_fk_1")
+  medical_org_dir             medical_org_dir[]
   uirs_users_patients_doctors uirs_users_patients_doctors[]
 }
 
@@ -107,9 +110,11 @@ model medical_org {
   parent_id              Int?
   medical_org_name_small String?                @db.VarChar
   region                 String?                @db.VarChar
+  inn                    String?                @db.VarChar
   med_post               med_post[]
   medical_org            medical_org?           @relation("medical_orgTomedical_org", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "medical_org_fk")
   other_medical_org      medical_org[]          @relation("medical_orgTomedical_org")
+  medical_org_dir        medical_org_dir[]
   medical_org_district   medical_org_district[]
 }
 
@@ -160,9 +165,10 @@ model patient {
   sp_district_id                                          Int?
   address                                                 String?                       @db.VarChar
   doc_id                                                  Int?
+  rir_id                                                  String?                       @db.VarChar
   appointment                                             appointment[]
   sp_district                                             sp_district?                  @relation(fields: [sp_district_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "patient_district_fk")
-  patient_documents_patient_doc_idTopatient_documents     patient_documents?            @relation("patient_doc_idTopatient_documents", fields: [doc_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "patient_fk")
+  patient_documents_patient_doc_idTopatient_documents     patient_documents?            @relation("patient_doc_idTopatient_documents", fields: [doc_id], references: [id], onUpdate: NoAction, map: "patient_fk")
   gender                                                  gender                        @relation(fields: [gender_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "patient_gender_fk")
   patient_anamnesis                                       patient_anamnesis[]
   patient_documents_patient_documents_patient_idTopatient patient_documents[]           @relation("patient_documents_patient_idTopatient")
@@ -194,8 +200,9 @@ model patient_documents {
   representative_phone                          String?   @db.VarChar
   representative_address_fact                   String?   @db.VarChar
   representative_factor                         Int?
+  document_seies                                String?   @db.VarChar
   patient_patient_doc_idTopatient_documents     patient[] @relation("patient_doc_idTopatient_documents")
-  patient_patient_documents_patient_idTopatient patient?  @relation("patient_documents_patient_idTopatient", fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "patient_documents_fk")
+  patient_patient_documents_patient_idTopatient patient?  @relation("patient_documents_patient_idTopatient", fields: [patient_id], references: [id], onUpdate: NoAction, map: "patient_documents_fk")
 }
 
 model roles {
@@ -260,4 +267,16 @@ model files {
   path      String     @db.VarChar
   act       act[]
   contract  contract[]
+}
+
+model medical_org_dir {
+  id             Int         @id(map: "medical_org_dir_pk") @default(autoincrement())
+  doctor_id      Int
+  medical_org_id Int
+  date_start     DateTime?   @db.Date
+  date_end       DateTime?   @db.Date
+  order          Int?
+  document       String?     @db.VarChar
+  doctor         doctor      @relation(fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "medical_org_dir_fk")
+  medical_org    medical_org @relation(fields: [medical_org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "medical_org_dir_fk_1")
 }

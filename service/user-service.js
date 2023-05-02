@@ -8,6 +8,34 @@ const UserDto = require('../dtos/user-dto')
 
 class UserService {
     
+    async addDoctor (secondName, firstName, patronomicName, tabelNum, phone, email, birthDate,  gender,  postId) {
+        try {
+            const doctor = await prisma.doctor.create({
+                data: {
+                    tabel_num: tabelNum,
+                    surname: secondName,
+                    name: firstName,
+                    patronomic_name: patronomicName,
+                    phone: '+7 ' + phone,
+                    email: email,
+                    birth_date: birthDate,
+                    full_name: secondName + ' ' + firstName + ' ' + patronomicName,
+                    med_post: {
+                        connect: {id: parseInt(postId)},
+                    },
+                    gender: {
+                        connect: {id: parseInt(gender)},
+                    },
+                    
+                }
+            })
+            return doctor
+        }
+        catch (e) {
+            console.log(e)
+        }  
+    }
+
     async registrationPatient (login, password, patient_id) {
         try {
             //find candidate            
@@ -71,7 +99,7 @@ class UserService {
         }
     }
     //registration method
-    async registration (login, password, Doctor_id, role) {
+    async registration (Doctor_id, login, password, role_id) {
         try {
             //find candidate            
             const candidate = await prisma.uirs_users_db.findMany({
@@ -96,9 +124,10 @@ class UserService {
                     password: hashPassword
                 },
             })
+            console.log(parseInt(role_id))
             const uirs_users = await prisma.uirs_users.create({
                 data: {
-                    role_id: parseInt(role),
+                    role_id: parseInt(role_id),
                     uirs_users_db_id: uirs_users_db.id
                 }
             })
